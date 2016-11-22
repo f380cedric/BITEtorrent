@@ -28,5 +28,5 @@
 from lib.peers import peers
 
 alice = peers('alice')
-#alice.start()
+alice.start()
 #alice.generate_chunk_message(0xa2f9fc503534324c035b8ff21a465a5b25726a1d)

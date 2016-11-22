@@ -47,7 +47,7 @@ class peers:
             with conn:
                 print('Connected by', addr)
                 while True:
-                    data = conn.recv(1024)
+                    data = conn.recv(5120000)
                     if not data:
                         break
                     if not peers.check_message(data): #INVALID_MESSAGE_FORMAT
@@ -58,24 +58,33 @@ class peers:
                         conn.sendall(peers.generate_error(1))
                         print('Error : invalid request. \n')
                         break
-                    if not peers.check_chunk(self,peers.chunk_hash(data)): #ERROR CHUNK_NOT_FOUND
+                    if not self.check_chunk(peers.chunk_hash(data)): #ERROR CHUNK_NOT_FOUND
                         conn.sendall(peers.generate_error(2))
                         print('Error : chunk not found. \n')
                         break
-                    print('ok')
-                    #conn.sendall(generate_chunk_message(self,peers.chunk_hash(data)))
+                    conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
 
     def check_chunk(self,chunk_hash):
         """ Check if the peer have the requested chunk """
         return os.path.isfile("../chunks/"+self.name+"/"+hex(chunk_hash)[2:]+".bin")
 
     def generate_chunk_message(self,chunk_hash):
-        with open("../chunks/"+self.name+"/"+hex(chunk_hash)[2:]+".bin",'rb') as file
+        with open("../chunks/"+self.name+"/"+hex(chunk_hash)[2:]+".bin",'rb') as file:
             content = file.read()
-        print(content)
-        pac = bytearray(content)
-        packet = bytearray([1,5, msg_length])
-        return True
+        chunk_content = bytearray(content)
+
+        while not (len(chunk_content)-2)%4:
+            chunk_content = chunk_content + bytearray([0])
+
+        chunk_content_length = len(chunk_content) # En bytes
+        msg_length = 6 + 1 +  (chunk_content_length-2)%4
+
+
+        header_b = bytearray([1,5, msg_length>>8&0xFF,msg_length&0xFF])
+        chunk_hash_b = bytearray([chunk_hash >> i & 0xff for i in range(152,-1,-8)])
+        chunk_content_length_b = bytearray([chunk_content_length>>8&0xFF,chunk_content_length&0xFF])
+
+        return header_b+chunk_hash_b+chunk_content_length_b+chunk_content
 
     @staticmethod
     def check_message(message):
