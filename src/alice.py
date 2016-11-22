@@ -95,7 +95,7 @@ class peers:
     @staticmethod
     def is_get_chunck(message):
         """ Check the request to see if it is a GET_CHUNK """
-        return message[1]==4 & message[2]<<8|message[3] == 6
+        return (message[1]==4) & (message[2]<<8|message[3] == 6)
 
     @staticmethod
     def generate_error(error_code):
@@ -111,5 +111,5 @@ class peers:
         return chunk_hash
 
 alice = peers('alice')
-alice.generate_chunk_message(0xa2f9fc503534324c035b8ff21a465a5b25726a1d)
-#alice.start()
+#alice.generate_chunk_message(0xa2f9fc503534324c035b8ff21a465a5b25726a1d)
+alice.start()
