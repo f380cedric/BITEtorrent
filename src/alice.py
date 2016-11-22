@@ -53,12 +53,15 @@ class peers:
                         break
                     if not peers.check_message(data): #INVALID_MESSAGE_FORMAT
                         conn.sendall(peers.generate_error(0))
+                        print('Error : invalid message format. \n')
                         break
                     if not peers.is_get_chunck(data): #ERROR INVALID_REQUEST
                         conn.sendall(peers.generate_error(1))
+                        print('Error : invalid request. \n')
                         break
                     if not peers.check_chunk(self,peers.chunk_hash(data)): #ERROR CHUNK_NOT_FOUND
                         conn.sendall(peers.generate_error(2))
+                        print('Error : chunk not found. \n')
                         break
                     print('ok')
                     #conn.sendall(generate_chunk_message(self,peers.chunk_hash(data)))
@@ -93,7 +96,7 @@ class peers:
     def is_get_chunck(message):
         """ Check the request to see if it is a GET_CHUNK """
         return message[1]==4
-
+        
     @staticmethod
     def generate_error(error_code):
         """ Generate the ERROR message """
