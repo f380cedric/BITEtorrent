@@ -1,6 +1,7 @@
 import os
 import socket
 import configparser
+import hashlib
 
 class test_alice:
     def __init__(self,name):
@@ -17,6 +18,18 @@ class test_alice:
             data = s.recv(5120000)
         #print('Received', repr(data))
         print(len(data))
+        chunk_hash=0
+        for i in range(20):
+            chunk_hash = data[23-i] << 8*i | chunk_hash
+        print('Chunk_Hash : ',chunk_hash)
+        print('Msg_length : ',data[2]<<8|data[3])
+        print('Chunk_Content_length : ',data[24]<<8|data[25])
+        chunk_content = data[26:-3]
+        print(chunk_content)
+        chunk_hash_content = hashlib.sha1(chunk_content).hexdigest()
+        print(chunk_hash_content)
+        print(hex(chunk_hash)[2:])
+        print(chunk_hash_content == hex(chunk_hash)[2:])
 
 test = test_alice('bob')
 test.start()
