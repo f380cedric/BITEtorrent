@@ -62,6 +62,7 @@ class peers:
                         conn.sendall(peers.generate_error(2))
                         print('Error : chunk not found. \n')
                         break
+                    print('Message is OK')
                     conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
 
     def check_chunk(self,chunk_hash):
@@ -71,20 +72,31 @@ class peers:
     def generate_chunk_message(self,chunk_hash):
         with open("../chunks/"+self.name+"/"+hex(chunk_hash)[2:]+".bin",'rb') as file:
             content = file.read()
+
         chunk_content = bytearray(content)
 
-        while not (len(chunk_content)-2)%4:
-            chunk_content = chunk_content + bytearray([0])
+        print(len(chunk_content))
+
+        while (len(chunk_content)-2)%4 != 0:
+            chunk_content = chunk_content + bytearray(1) # Add 1 byte of zeros
+            print('padded')
 
         chunk_content_length = len(chunk_content) # En bytes
-        msg_length = 6 + 1 +  (chunk_content_length-2)%4
+
+        print('chunk_content_length : ',chunk_content_length)
+        msg_length = 6 + 1 + ((chunk_content_length-2)//4)
+        print('msg_length : ',msg_length)
 
 
         header_b = bytearray([1,5, msg_length>>8&0xFF,msg_length&0xFF])
         chunk_hash_b = bytearray([chunk_hash >> i & 0xff for i in range(152,-1,-8)])
         chunk_content_length_b = bytearray([chunk_content_length>>8&0xFF,chunk_content_length&0xFF])
 
+        print('chunk generated')
+        print('Nbr of bytes sent : ',len(header_b+chunk_hash_b+chunk_content_length_b+chunk_content))
+
         return header_b+chunk_hash_b+chunk_content_length_b+chunk_content
+        return chunk
 
     @staticmethod
     def check_message(message):
