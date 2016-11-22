@@ -70,9 +70,8 @@ class peers:
         return os.path.isfile("../chunks/"+self.name+"/"+hex(chunk_hash)[2:]+".bin")
 
     def generate_chunk_message(self,chunk_hash):
-        file = open("../chunks/"+self.name+"/"+hex(chunk_hash)[2:]+".bin",'rb')
-        content = file.read()
-        file.close()
+        with open("../chunks/"+self.name+"/"+hex(chunk_hash)[2:]+".bin",'rb') as file
+            content = file.read()
         print(content)
         pac = bytearray(content)
         packet = bytearray([1,5, msg_length])
