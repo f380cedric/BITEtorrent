@@ -4,12 +4,15 @@
 
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |    version    |   msg_type    |          msg_length           |
+    |    version    |   msg_type    |           reserved            |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                          msg_length                           |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 - `version` must equal to `1`
 - `msg_type` must be between `0` and `6` (included) depending on the body type
-- `msg_length` is the total length of the message in *dwords* (*e.g.*, if the message has a body of 12 bytes, `msg_length` will be `(4 + 12) / 4 = 4`)
+- `reserved` are reserved bits for future use and must be ignored
+- `msg_length` is the total length of the message in *dwords* (*e.g.*, if the message has a body of 12 bytes, `msg_length` will be `(8 + 12) / 4 = 5`)
 
 ## Body
 
@@ -107,12 +110,12 @@ The possible body types are:
     |                                                               |
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |    chunk_content_length       |        chunk_content          |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+    |                     chunk_content_length                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                                                               |
     |                                                               |
     |                                                               |
-    |                                                               |
+    |                         chunk_content                         |
     |                               .                               |
     |                               .                               |
     |                               .                               |
