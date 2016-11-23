@@ -44,12 +44,12 @@ class peers:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((self.ip, self.port))
             print('\nServer is now bound to ip',self.ip,' and port',self.port)
-            print('Server is now ready to accept connection')
             s.listen(1) # Number of connection that the peers will accept
             #while True:
+            print('Waiting for connection')
             conn, addr = s.accept()
             with conn:
-                print('Connected by', addr,'\nReady to receive request')
+                print('Connected by', addr)
                 while True:
                     data = conn.recv(5120000)
                     if not data:
@@ -68,6 +68,8 @@ class peers:
                         break
                     print('Request received for chunk', hex(peers.chunk_hash(data))[2:])
                     conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
+                    print('Chunk sent')
+            print('Connection close')
 
     def check_chunk(self,chunk_hash):
         """ Check if the peer have the requested chunk """
@@ -79,7 +81,7 @@ class peers:
 
         chunk_content = bytearray(content)
 
-        print(len(chunk_content))
+        print('Numbers of bytes in content :',len(chunk_content))
 
         while (len(chunk_content)-2)%4 != 0:
             chunk_content = chunk_content + bytearray(1) # Add 1 byte of zeros
@@ -87,9 +89,9 @@ class peers:
 
         chunk_content_length = len(chunk_content) # En bytes
 
-        print('chunk_content_length : ',chunk_content_length)
+        print('chunk_content_length :',chunk_content_length)
         msg_length = 6 + 1 + ((chunk_content_length-2)//4)
-        print('msg_length : ',msg_length)
+        print('msg_length :',msg_length)
 
 
         header_b = bytearray([1,5, msg_length>>8&0xFF,msg_length&0xFF])
@@ -97,7 +99,7 @@ class peers:
         chunk_content_length_b = bytearray([chunk_content_length>>8&0xFF,chunk_content_length&0xFF])
 
         print('chunk generated')
-        print('Nbr of bytes sent : ',len(header_b+chunk_hash_b+chunk_content_length_b+chunk_content))
+        print('Nbr of bytes sent :',len(header_b+chunk_hash_b+chunk_content_length_b+chunk_content))
 
         return header_b+chunk_hash_b+chunk_content_length_b+chunk_content
         return chunk
