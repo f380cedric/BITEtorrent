@@ -39,30 +39,34 @@ class peers:
 
     def start(self):
         """ Start the peers to listen to connection """
+        print('Welcome to Peers Server\nSoftware developped by ChrisSoft Inc.')
+        print('Server is lauched as',self.name)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((self.ip, self.port))
+            print('\nServer is now bound to ip',self.ip,' and port',self.port)
+            print('Server is now ready to accept connection')
             s.listen(1) # Number of connection that the peers will accept
             #while True:
             conn, addr = s.accept()
             with conn:
-                print('Connected by', addr)
+                print('Connected by', addr,'\nReady to receive request')
                 while True:
                     data = conn.recv(5120000)
                     if not data:
                         break
                     if not peers.check_message(data): #INVALID_MESSAGE_FORMAT
                         conn.sendall(peers.generate_error(0))
-                        print('Error : invalid message format. \n')
+                        print('Error #0 : invalid message format')
                         break
                     if not peers.is_get_chunck(data): #ERROR INVALID_REQUEST
                         conn.sendall(peers.generate_error(1))
-                        print('Error : invalid request. \n')
+                        print('Error #1 : invalid request')
                         break
                     if not self.check_chunk(peers.chunk_hash(data)): #ERROR CHUNK_NOT_FOUND
                         conn.sendall(peers.generate_error(2))
-                        print('Error : chunk not found. \n')
+                        print('Error #2 : chunk not found')
                         break
-                    print('Message is OK')
+                    print('Request received for chunk', hex(peers.chunk_hash(data))[2:])
                     conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
 
     def check_chunk(self,chunk_hash):
