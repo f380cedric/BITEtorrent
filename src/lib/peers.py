@@ -28,6 +28,7 @@
 import os
 import socket
 import configparser
+import struct
 
 class peers:
     def __init__(self,name):
@@ -125,7 +126,12 @@ class peers:
     @staticmethod
     def generate_error(error_code):
         """ Generate the ERROR message """
-        return bytearray([1,6,0,2,error_code>>8&0xFF,error_code&0xFF,0,0])
+        ver = 1
+        msg_type = 6
+        msg_length = 3
+        print(struct.pack("!BBHLHH",ver,msg_type,0,msg_length,error_code,0))
+        return struct.pack("!BBHLHH",ver,msg_type,0,msg_length,error_code,0)
+        #return bytearray([1,6,0,0,0,0,0,3,error_code>>8&0xFF,error_code&0xFF,0,0])
 
     @staticmethod
     def chunk_hash(message_get_chunk):
