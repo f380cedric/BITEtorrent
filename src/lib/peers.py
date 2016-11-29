@@ -29,6 +29,7 @@ import os
 import socket
 import configparser
 import struct
+import binascii
 
 class peers:
     def __init__(self,name):
@@ -68,13 +69,14 @@ class peers:
                         print('Error #2 : chunk not found')
                         break
                     print('Request received for chunk', hex(peers.chunk_hash(data))[2:])
-                    conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
+                    #conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
+                    conn.sendall('OK')
                     print('Chunk sent')
             print('Connection close')
 
     def check_chunk(self,chunk_hash):
         """ Check if the peer have the requested chunk """
-        return os.path.isfile("../chunks/"+self.name+"/"+hex(chunk_hash)[2:]+".bin")
+        return os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin")
 
     def generate_chunk_message(self,chunk_hash):
         with open("../chunks/"+self.name+"/"+hex(chunk_hash)[2:]+".bin",'rb') as file:
@@ -138,8 +140,5 @@ class peers:
 
     @staticmethod
     def chunk_hash(message_get_chunk):
-        """ Take the GET_CHUNK message in entry and returns the chunk_hash """
-        chunk_hash = 0
-        for i in range(20):
-            chunk_hash = message_get_chunk[23-i] << 8*i | chunk_hash
-        return chunk_hash
+        """ Take the GET_CHUNK message in entry and returns the chunk_hash in string """
+        return bytes.decode(binascii.hexlify(struct.unpack("!BBHL20s",message_get_chunk)[4]))
