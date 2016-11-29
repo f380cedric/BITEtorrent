@@ -30,6 +30,7 @@ import socket
 import configparser
 import struct
 import binascii
+import math
 
 class peers:
     def __init__(self,name):
@@ -68,9 +69,8 @@ class peers:
                         conn.sendall(peers.generate_error(2))
                         print('Error #2 : chunk not found')
                         break
-                    print('Request received for chunk', hex(peers.chunk_hash(data))[2:])
-                    #conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
-                    conn.sendall('OK')
+                    print('Request received for chunk', peers.chunk_hash(data))
+                    conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
                     print('Chunk sent')
             print('Connection close')
 
@@ -79,33 +79,18 @@ class peers:
         return os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin")
 
     def generate_chunk_message(self,chunk_hash):
-        with open("../chunks/"+self.name+"/"+hex(chunk_hash)[2:]+".bin",'rb') as file:
+        with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'rb') as file:
             content = file.read()
 
-        chunk_content = bytearray(content)
+        msg_length = 8 + math.ceil(len(content)/4)
+        chunk_content_length = len(content)
+        padding = len(content)%4
+        fmt_content = "!20sL%ds%ds" %(len(content),padding)
 
-        print('Numbers of bytes in content :',len(chunk_content))
+        header = struct.pack("!BBHL",1,5,0,msg_length)
+        message_content = struct.pack(fmt_content,bytes.fromhex(chunk_hash),chunk_content_length,content,bytes(padding))
 
-        while (len(chunk_content)-2)%4 != 0:
-            chunk_content = chunk_content + bytearray(1) # Add 1 byte of zeros
-            print('padded')
-
-        chunk_content_length = len(chunk_content) # En bytes
-
-        print('chunk_content_length :',chunk_content_length)
-        msg_length = 6 + 1 + ((chunk_content_length-2)//4)
-        print('msg_length :',msg_length)
-
-
-        header_b = bytearray([1,5, msg_length>>8&0xFF,msg_length&0xFF])
-        chunk_hash_b = bytearray([chunk_hash >> i & 0xff for i in range(152,-1,-8)])
-        chunk_content_length_b = bytearray([chunk_content_length>>8&0xFF,chunk_content_length&0xFF])
-
-        print('chunk generated')
-        print('Nbr of bytes sent :',len(header_b+chunk_hash_b+chunk_content_length_b+chunk_content))
-
-        return header_b+chunk_hash_b+chunk_content_length_b+chunk_content
-        return chunk
+        return header+message_content
 
     @staticmethod
     def check_message(message):
