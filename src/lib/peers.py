@@ -124,7 +124,7 @@ class peers:
     @staticmethod
     def is_get_chunck(message):
         """ Check the request to see if it is a GET_CHUNK """
-        return (message[1]==4) & (message[2]<<8|message[3] == 6)
+        return (struct.unpack("!BBHL",message[0:8])[1] == 4) & (struct.unpack("!BBHL",message[0:8])[3] == 7)
 
     @staticmethod
     def generate_error(error_code):
