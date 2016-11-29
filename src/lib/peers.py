@@ -110,10 +110,13 @@ class peers:
         """ Check if the message is valid """
         check_chunk = False
         if not len(message)%4:
+            print('Multiple of 4 : OK')
         # Multiple of 4
-            if message[0] == 1:
+            if struct.unpack("!BBHL",message[0:8])[0] == 1:
+                print('Version is one : OK')
             # Version is one
-                if (message[2]<<8|message[3]) == len(message)/4:
+                if (struct.unpack("!BBHL",message[0:8])[3]) == len(message)/4:
+                    print('Correct size : OK')
                 # body is correct size wrt msg_length
                     check_chunk = True
         return check_chunk
