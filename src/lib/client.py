@@ -13,7 +13,7 @@ import threading
 #         chunks[config['chunks'][key]] = (config['chunks_peers'].get(key)).split(',')
 
 class client(threading.Thread):
-    def __init__(self,n):
+    def __init__(self,name):
         threading.Thread.__init__(self)
         self.name = name
 
@@ -62,7 +62,3 @@ class client(threading.Thread):
 
         return header+message_content
 lock = threading.Lock()
-t1 = client(1)
-t2 = client(2)
-t1.start()
-t2.start()
