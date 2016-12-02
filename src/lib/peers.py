@@ -19,7 +19,7 @@
 ####### Otherwise : CHUNK message
 
 # Known problems :
-# 
+#
 # sendall or send ?
 # Accept one connection at a time (=> multithreading ?)
 # Stop listening after one connection (=> while True:)
@@ -48,31 +48,33 @@ class peers:
             s.bind((self.ip, self.port))
             print('\nServer is now bound to ip',self.ip,' and port',self.port)
             s.listen(1) # Number of connection that the peers will accept
-            #while True:
-            print('Waiting for connection')
-            conn, addr = s.accept()
-            with conn:
-                print('Connected by', addr)
-                while True:
-                    data = conn.recv(5120000)
-                    if not data:
-                        break
-                    if not peers.check_message(data): #INVALID_MESSAGE_FORMAT
-                        conn.sendall(peers.generate_error(0))
-                        print('Error #0 : invalid message format')
-                        break
-                    if not peers.is_get_chunck(data): #ERROR INVALID_REQUEST
-                        conn.sendall(peers.generate_error(1))
-                        print('Error #1 : invalid request')
-                        break
-                    if not self.check_chunk(peers.chunk_hash(data)): #ERROR CHUNK_NOT_FOUND
-                        conn.sendall(peers.generate_error(2))
-                        print('Error #2 : chunk not found')
-                        break
-                    print('Request received for chunk', peers.chunk_hash(data))
-                    conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
-                    print('Chunk sent')
-            print('Connection close')
+            while True:
+                print('Waiting for connection')
+                conn, addr = s.accept()
+                with conn:
+                    print('Connected by', addr)
+                    while True:
+                        data = conn.recv(5120000)
+                        if not data:
+                            break
+                        if not peers.check_message(data): #INVALID_MESSAGE_FORMAT
+                            conn.sendall(peers.generate_error(0))
+                            print('Error #0 : invalid message format')
+
+                        elif not peers.is_get_chunck(data): #ERROR INVALID_REQUEST
+                            conn.sendall(peers.generate_error(1))
+                            print('Error #1 : invalid request')
+
+                        elif not self.check_chunk(peers.chunk_hash(data)): #ERROR CHUNK_NOT_FOUND
+                            conn.sendall(peers.generate_error(2))
+                            print('Error #2 : chunk not found')
+
+                        else:
+                            print('Request received for chunk', peers.chunk_hash(data))
+                            conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
+                            print('Chunk sent')
+
+                print('Connection close')
 
     def check_chunk(self,chunk_hash):
         """ Check if the peer have the requested chunk """
