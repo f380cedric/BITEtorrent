@@ -51,10 +51,13 @@ class peers:
             while True:
                 print('Waiting for connection')
                 conn, addr = s.accept()
+                print(conn)
+                print(addr)
                 with conn:
                     print('Connected by', addr)
                     while True:
                         data = conn.recv(5120000)
+                        print(data)
                         if not data:
                             break
                         if not peers.check_message(data): #INVALID_MESSAGE_FORMAT

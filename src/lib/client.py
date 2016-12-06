@@ -2,12 +2,12 @@ import os
 import socket
 import configparser
 import struct
+import threading
 
-class client(threading.Thread):
+class client():
     def __init__(self,name):
-        threading.Thread.__init__(self)
         self.name = name
-
+        self.lock= {'alice':threading.Lock(), 'bob' : threading.Lock()}
         config = configparser.ConfigParser()
         config.read('../config/peers.ini')
         self.addresses = {}
@@ -20,18 +20,24 @@ class client(threading.Thread):
         for key in config['chunks']:
             if config['chunks'][key]+".bin" not in mychunks:
                 self.chunks[config['chunks_peers'].get(key)].append(config['chunks'][key])
-        print(self.chunks)
         #self.lock
-    def run(self):
-        thread_alice = threading.Thread(target=receptor,args=('alice'))
-        thread_bob = threading.Thread(target=receptor,args=('bob'))
-        while True:
+    def start(self):
+        thread_alice = threading.Thread(target=self.receptor('alice'))
+        thread_bob = threading.Thread(target=self.receptor('bob'))
+        thread_alice.daemon = True
+        thread_bob.daemon   = True
+        thread_alice.start()
+        thread_bob.start()
+        while not (self.lock['alice'].locked() or self.lock['bob'].locked()):
+            pass
+            """
             ...lock alice
 
             ...lock bob
 
             if ...
                 break
+            """
 
         #while True:
         # lock.acquire()
@@ -44,11 +50,17 @@ class client(threading.Thread):
         # lock.release()
 
     def receptor(self,name):
-        return 0
-
-    def chunk_request(self, chunk_hash, client):
-        self.s.send(self.chunk_message_generator(chunk_hash))
-        return self.s.recv(5120000)
+        self.lock[name].acquire()
+        address = self.addresses[name]
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect(address)
+            for i in self.chunks[name]:
+                result = self.chunk_request(i, s)
+                print(name+'\n',len(result))
+            s.shutdown(1)
+    def chunk_request(self, chunk_hash, sock):
+        sock.send(self.chunk_message_generator(chunk_hash))
+        return sock.recv(5120000)
         # WIP
 
     def chunk_message_generator(self,chunk_hash):
