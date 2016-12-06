@@ -2,15 +2,6 @@ import os
 import socket
 import configparser
 import struct
-import threading
-
-# mychunks = os.listdir('../chunks/charlie')
-# config = configparser.ConfigParser()
-# config.read('../config/file.ini')
-# chunks = {}
-# for key in config['chunks']:
-#     if config['chunks'][key]+".bin" not in mychunks:
-#         chunks[config['chunks'][key]] = (config['chunks_peers'].get(key)).split(',')
 
 class client(threading.Thread):
     def __init__(self,name):
@@ -32,22 +23,28 @@ class client(threading.Thread):
         print(self.chunks)
         #self.lock
     def run(self):
-        return
+        thread_alice = threading.Thread(target=receptor,args=('alice'))
+        thread_bob = threading.Thread(target=receptor,args=('bob'))
         while True:
+            ...lock alice
 
-            """
-        lock.acquire()
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as self.s:
-            # JUST FOR TESTING
-            for key in self.chunks:
-                peer = self.chunks
+            ...lock bob
 
-            self.s.connect(self.addresses[self.chunks['6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8'][0]])
-            result = self.chunk_request('6b14c28263c0b81a4bb70ddbc3c504be5bc8f4e8',self.addresses[self.chunks['6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8'][0]])
-            if struct.unpack("!BBHLHH",result)[1] == 6 :
-                self.chunk_request('6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8',self.addresses[self.chunks['6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8'][0]])
-                """
-        lock.release()
+            if ...
+                break
+
+        #while True:
+        # lock.acquire()
+        # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as self.s:
+        #     # JUST FOR TESTING
+        #     self.s.connect(self.addresses[self.chunks['6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8'][0]])
+        #     result = self.chunk_request('6b14c28263c0b81a4bb70ddbc3c504be5bc8f4e8',self.addresses[self.chunks['6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8'][0]])
+        #     if struct.unpack("!BBHLHH",result)[1] == 6 :
+        #         self.chunk_request('6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8',self.addresses[self.chunks['6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8'][0]])
+        # lock.release()
+
+    def receptor(self,name):
+        return 0
 
     def chunk_request(self, chunk_hash, client):
         self.s.send(self.chunk_message_generator(chunk_hash))
