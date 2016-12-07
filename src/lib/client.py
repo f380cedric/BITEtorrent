@@ -3,6 +3,7 @@ import socket
 import configparser
 import struct
 import threading
+import queue
 
 class client():
     def __init__(self,name):
@@ -16,28 +17,37 @@ class client():
 
         mychunks = os.listdir('../chunks/' +name)
         config.read('../config/file.ini')
-        self.chunks = {'alice':[],'bob':[],'alice, bob':[]}
+        self.chunks = {}
         for key in config['chunks']:
             if config['chunks'][key]+".bin" not in mychunks:
-                self.chunks[config['chunks_peers'].get(key)].append(config['chunks'][key])
+                dic = config['chunks_peers'].get(key)
+                if dic in self.chunks:
+                    self.chunks[dic].put(config['chunks'][key])
+                else:
+                    self.chunks[dic] = queue.Queue()
+                    self.chunks[dic].put(config['chunks'][key])
         #self.lock
     def start(self):
-        thread_alice = threading.Thread(target=self.receptor('alice'))
-        thread_bob = threading.Thread(target=self.receptor('bob'))
-        thread_alice.daemon = True
-        thread_bob.daemon   = True
+        thread_alice = threading.Thread(target=self.receptor,args = ['alice'])
+        thread_bob = threading.Thread(target=self.receptor, args = ['bob'])
         thread_alice.start()
         thread_bob.start()
-        while not (self.lock['alice'].locked() or self.lock['bob'].locked()):
-            pass
-            """
-            ...lock alice
+        self.chunks['alice, bob'].join()
+        self.chunks['alice'].join()
+        self.chunks['bob'].join()
+        for key in self.chunks:
+            self.chunks[key].put(None)
+        thread_bob.join()
+        thread_alice.join()
 
-            ...lock bob
+        """
+        ...lock alice
 
-            if ...
-                break
-            """
+        ...lock bob
+
+        if ...
+            break
+        """
 
         #while True:
         # lock.acquire()
@@ -50,13 +60,24 @@ class client():
         # lock.release()
 
     def receptor(self,name):
-        self.lock[name].acquire()
         address = self.addresses[name]
-        for i in self.chunks[name]:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.connect(address)
-                result = self.chunk_request(i, s)
-                print(name+'\n',len(result),'\n',i)
+        while True:
+            try:
+                chunk_hash = self.chunks[name].get(False)
+                if chunk_hash is None:
+                    break
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.connect(address)
+                    result = self.chunk_request(chunk_hash, s)
+                    print(name,len(result),chunk_hash)
+
+                self.chunks[name].task_done()
+            except queue.Empty as e:
+                try:
+                    self.chunks[name].put(self.chunks['alice, bob'].get(False))
+                    self.chunks['alice, bob'].task_done()
+                except queue.Empty as e:
+                    pass
 
     def chunk_request(self, chunk_hash, sock):
         data = bytes()
