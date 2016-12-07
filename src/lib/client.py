@@ -61,23 +61,25 @@ class client():
 
     def receptor(self,name):
         address = self.addresses[name]
-        while True:
-            try:
-                chunk_hash = self.chunks[name].get(False)
-                if chunk_hash is None:
-                    break
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.connect(address)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.connect(address)
+            while True:
+                try:
+                    chunk_hash = self.chunks[name].get(False)
+                    if chunk_hash is None:
+                        break
                     result = self.chunk_request(chunk_hash, s)
                     print(name,len(result),chunk_hash)
-
-                self.chunks[name].task_done()
-            except queue.Empty as e:
-                try:
-                    self.chunks[name].put(self.chunks['alice, bob'].get(False))
-                    self.chunks['alice, bob'].task_done()
+                    self.chunks[name].task_done()
+                    if result == [False, False]:
+                        break
                 except queue.Empty as e:
-                    pass
+                    try:
+                        self.chunks[name].put(self.chunks['alice, bob'].get(False))
+                        self.chunks['alice, bob'].task_done()
+                    except queue.Empty as e:
+                        pass
 
     def chunk_request(self, chunk_hash, sock):
         data = bytes()
@@ -88,7 +90,7 @@ class client():
             if not result:
                 sock.close()
                 print('Connection close')
-                return
+                return [False, False]
             length = int(struct.unpack("!BBHL",data[0:8])[3])*4
             if len(data) == length:
                 break
