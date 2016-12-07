@@ -31,6 +31,7 @@ import configparser
 import struct
 import binascii
 import math
+import threading
 
 class peers:
     def __init__(self,name):
@@ -45,40 +46,49 @@ class peers:
         print('Welcome to Peers Server\nSoftware developped by ChrisSoft Inc.')
         print('Server is lauched as',self.name)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((self.ip, self.port))
             print('\nServer is now bound to ip',self.ip,' and port',self.port)
             s.listen(1) # Number of connection that the peers will accept
             while True:
                 print('Waiting for connection')
                 conn, addr = s.accept()
-                print(conn)
-                print(addr)
-                with conn:
-                    print('Connected by', addr)
-                    while True:
-                        data = conn.recv(5120000)
-                        print(data)
-                        if not data:
-                            break
-                        if not peers.check_message(data): #INVALID_MESSAGE_FORMAT
-                            conn.sendall(peers.generate_error(0))
-                            print('Error #0 : invalid message format')
+                print('Connected by', addr)
+                th = threading.Thread(target=self.handle_client(conn))
+                th.daemon = True
+                th.start()
 
-                        elif not peers.is_get_chunck(data): #ERROR INVALID_REQUEST
-                            conn.sendall(peers.generate_error(1))
-                            print('Error #1 : invalid request')
-
-                        elif not self.check_chunk(peers.chunk_hash(data)): #ERROR CHUNK_NOT_FOUND
-                            conn.sendall(peers.generate_error(2))
-                            print('Error #2 : chunk not found')
-
-                        else:
-                            print('Request received for chunk', peers.chunk_hash(data))
-                            conn.sendall(self.generate_chunk_message(peers.chunk_hash(data)))
-                            print('Chunk sent')
-
+    def handle_client(self, conn):
+        data = bytes()
+        while True:
+            result = conn.recv(524288)
+            data += result
+            if not result:
+                conn.close()
                 print('Connection close')
+                return
+            length = int(struct.unpack("!BBHL",data[0:8])[3])*4
+            if len(data) == length:
+                conn.shutdown(0)
+                break
+        if not peers.check_message(data): #INVALID_MESSAGE_FORMAT
+            conn.send(peers.generate_error(0))
+            print('Error #0 : invalid message format')
+        elif not peers.is_get_chunck(data): #ERROR INVALID_REQUEST
+            conn.send(peers.generate_error(1))
+            print('Error #1 : invalid request')
 
+        elif not self.check_chunk(peers.chunk_hash(data)): #ERROR CHUNK_NOT_FOUND
+            conn.send(peers.generate_error(2))
+            print('Error #2 : chunk not found')
+
+        else:
+            print('Request received for chunk', peers.chunk_hash(data))
+            print('sent: ',len(self.generate_chunk_message(peers.chunk_hash(data))))
+            conn.send(self.generate_chunk_message(peers.chunk_hash(data)))
+            print('Chunk sent')
+        conn.close()
+        return
     def check_chunk(self,chunk_hash):
         """ Check if the peer have the requested chunk """
         return os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin")

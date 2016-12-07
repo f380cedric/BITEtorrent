@@ -52,16 +52,26 @@ class client():
     def receptor(self,name):
         self.lock[name].acquire()
         address = self.addresses[name]
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect(address)
-            for i in self.chunks[name]:
+        for i in self.chunks[name]:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect(address)
                 result = self.chunk_request(i, s)
-                print(name+'\n',len(result))
-            s.shutdown(1)
+                print(name+'\n',len(result),'\n',i)
+
     def chunk_request(self, chunk_hash, sock):
+        data = bytes()
         sock.send(self.chunk_message_generator(chunk_hash))
-        return sock.recv(5120000)
-        # WIP
+        while True:
+            result = sock.recv(524288)
+            data += result
+            if not result:
+                sock.close()
+                print('Connection close')
+                return
+            length = int(struct.unpack("!BBHL",data[0:8])[3])*4
+            if len(data) == length:
+                break
+        return data
 
     def chunk_message_generator(self,chunk_hash):
         if os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin"):
