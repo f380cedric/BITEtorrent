@@ -54,8 +54,7 @@ class peers:
                 print('Waiting for connection')
                 conn, addr = s.accept()
                 print('Connected by', addr)
-                th = threading.Thread(target=self.handle_client(conn))
-                th.daemon = True
+                th = threading.Thread(target=self.handle_client, args = [conn], daemon = True)
                 th.start()
 
     def handle_client(self, conn):

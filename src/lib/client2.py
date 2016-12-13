@@ -13,7 +13,6 @@ class client2:
         config = configparser.ConfigParser()
         config.read('../config/peers.ini')
         self.tracker = (config['tracker']['ip_address'], int(config['tracker']['port_number']))
-        self.tracker_com()
 
     def tracker_com(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -26,7 +25,7 @@ class client2:
                 data += result
                 if not result:
                     s.close()
-                    print('shit')
+                    print('Connection close')
                     return False
             length = int(struct.unpack("!BBHL",data[0:8])[3])*4
             while len(data) < length:
@@ -44,26 +43,20 @@ class client2:
             print('ERROR NO DATA')
             return
         self.unpack_file_info(data)
-        for peer in iter(self.chunks.keys()):
-            th = threading.Thread(target=self.receptor(conn))
-            th.daemon = True
+        for key in self.chunks[0]:
+            th = threading.Thread(target=self.receptor,args = [key])
             th.start()
-        thread_alice = threading.Thread(target=self.receptor,args = ['alice','bob'])
-        thread_bob = threading.Thread(target=self.receptor, args = ['bob','alice'])
-        thread_alice.start()
-        thread_bob.start()
-        self.chunks['alice, bob'].join()
-        self.chunks['alice'].join()
-        self.chunks['bob'].join()
-        for key in self.chunks:
-            self.chunks[key].put(None)
-        thread_bob.join()
-        thread_alice.join()
+        while not self.providers == {}:
+            pass
+        for key in self.chunks[0]:
+            self.chunks[0][key].put(None)
 
     def unpack_file_info(self, data):
-        self.chunks = {}
+        self.chunks = [{},{}]
+        self.providers = {}
         data = data[8::]
         chunks_count, filename_length = map(int,struct.unpack('!2H', data[:4]))
+        self.number_of_chunks = chunks_count
         data = data[filename_length + filename_length%4 + 4 ::]
         chunk_info_len, offset = 0, 0
         for i in range(chunks_count):
@@ -72,60 +65,68 @@ class client2:
             chunk_info_len = 24 + peers_count * 8
             chunk_hash = bytes.decode(binascii.hexlify(chunk_hash))
             if chunk_hash+".bin" not in self.mychunks:
+                self.providers[chunk_hash] = []
                 peers = ()
                 for j in range(peers_count):
                     *ip, port = struct.unpack('!4BH', data[offset + 24 + j*8: offset + 24 + 6 + j*8])
                     ip = ".".join(map(str, ip))
+                    self.providers[chunk_hash].append((ip, port))
                     peers = peers + ((ip,port),)
-                if peers in self.chunks:
-                        self.chunks[peers].put(chunk_hash)
+                if len(peers) == 1:
+                    peers = peers[0]
+                    if peers in self.chunks[0]:
+                        self.chunks[0][peers].put(chunk_hash)
+                    else:
+                        self.chunks[0][peers] = queue.Queue()
+                        self.chunks[0][peers].put(chunk_hash)
                 else:
-                    self.chunks[peers] = queue.Queue()
-                    self.chunks[peers].put(chunk_hash)
-        print(self.chunks)
+                    if peers in self.chunks[1]:
+                            self.chunks[1][peers].put(chunk_hash)
+                    else:
+                        self.chunks[1][peers] = queue.Queue()
+                        self.chunks[1][peers].put(chunk_hash)
+                    for peer in peers:
+                        if peer not in self.chunks[0]:
+                            self.chunks[0][peer] = queue.Queue()
     def get_file_info(self):
         return struct.pack("!BBHL",1,2,0,2)
-    """
-    def start(self):
-        thread_alice = threading.Thread(target=self.receptor,args = ['alice','bob'])
-        thread_bob = threading.Thread(target=self.receptor, args = ['bob','alice'])
-        thread_alice.start()
-        thread_bob.start()
-        self.chunks['alice, bob'].join()
-        self.chunks['alice'].join()
-        self.chunks['bob'].join()
-        for key in self.chunks:
-            self.chunks[key].put(None)
-        thread_bob.join()
-        thread_alice.join()
-    """
-    def receptor(self,name,other_peer):
-        address = self.addresses[name]
+
+    def receptor(self,name,):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.connect(address)
+            s.connect(name)
             while True:
-                try:
-                    chunk_hash = self.chunks[name].get(False)
-                    if chunk_hash is None:
-                        break
-                    result = self.chunk_request(chunk_hash, s)
-                    if self.is_chunck_not_found(result):
-                        print('Chunk not found in',name,'directory')
-                        print('Chunk will be added to',other_peer,'queue')
-                        self.chunks[other_peer].put(chunk_hash)
-                        self.chunks[name].task_done()
-                    elif result == False:
-                        break
-                    else:
-                        print(name,len(result),chunk_hash)
-                        self.chunks[name].task_done()
-                except queue.Empty as e:
+                chunk_hash = False
+                while chunk_hash == False:
                     try:
-                        self.chunks[name].put(self.chunks['alice, bob'].get(False))
-                        self.chunks['alice, bob'].task_done()
-                    except queue.Empty as e:
-                        pass
+                        chunk_hash = self.chunks[0][name].get_nowait()
+                    except queue.Empty:
+                        for key in self.chunks[1]:
+                            try:
+                                if name in key:
+                                    self.chunks[0][name].put(self.chunks[1][key].get_nowait())
+                                    break
+                            except queue.Empty:
+                                pass
+                if chunk_hash is None:
+                    break
+                result = self.chunk_request(chunk_hash, s)
+                if self.is_chunck_not_found(result):
+                    print('Chunk not found in',name,'directory')
+                    providers = self.providers[chunk_hash]
+                    providers.remove(name)
+                    if len(providers) == 0:
+                        print('ERROR NO PROVIDER')
+                        exit()
+                    print('Chunk will be added to',providers[0],'queue')
+                    self.chunks[0][providers[0]].put(chunk_hash)
+                elif result == False:
+                    break
+                else:
+                    print(name,len(result),chunk_hash)
+                    with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'wb') as file:
+                        file.write(self.content(result))
+                        del self.providers[chunk_hash]
 
     def chunk_request(self, chunk_hash, sock):
         sock.send(self.chunk_message_generator(chunk_hash))
@@ -168,3 +169,9 @@ class client2:
             if (struct.unpack("!BBHLHH",message)[4] == 2):
                 return True
         return False
+
+    @staticmethod
+    def content(message):
+        """ Take a CHUNK message in argument and return only the chunk content """
+        chunk_content_length = struct.unpack("!BBHL20sL",message[0:32])[5]
+        return message[32:32+chunk_content_length]
