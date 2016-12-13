@@ -1,0 +1,5 @@
+In a terminal, type :
+
+java -jar plantuml.jar -teps filename
+
+http://plantuml.com/sequence-diagram
