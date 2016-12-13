@@ -60,6 +60,8 @@ class client1():
                         break
                     else:
                         print(name,len(result),chunk_hash)
+                        with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'wb') as file:
+                            file.write(result)
                         self.chunks[name].task_done()
                 except queue.Empty as e:
                     try:
