@@ -61,7 +61,7 @@ class client1():
                     else:
                         print(name,len(result),chunk_hash)
                         with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'wb') as file:
-                            file.write(result)
+                            file.write(self.content(result))
                         self.chunks[name].task_done()
                 except queue.Empty as e:
                     try:
@@ -106,3 +106,9 @@ class client1():
             if (struct.unpack("!BBHLHH",message)[4] == 2):
                 return True
         return False
+
+    @staticmethod
+    def content(message):
+        """ Take a CHUNK message in argument and return only the chunk content """
+        chunk_content_length = struct.unpack("!BBHL20sL",message[0:32])[5]
+        return message[32:32+chunk_content_length]
