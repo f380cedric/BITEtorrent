@@ -114,6 +114,12 @@ class client():
         return header+message_content
 
     @staticmethod
-    def is_chunck(message):
-        """ check the message, returns True if the message type is 5 (chunk) """
-        return (struct.unpack("!BBHL",message[0:8])[1] == 5)
+    def is_chunck_not_found(message):
+        """ check the message, returns True if:
+                - the message type is 6 (ERROR)
+                - the error_code is 2 (CHUNK_NOT_FOUND) 
+        """
+        if (struct.unpack("!BBHL",message[0:8])[1] == 6):
+            if (struct.unpack("!BBHLHH",message)[4] == 2):
+                return True
+        return False
