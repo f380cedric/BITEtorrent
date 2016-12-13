@@ -1,3 +1,5 @@
 In a terminal, type :
 
-ava -jar plantuml.jar -teps filename
+java -jar plantuml.jar -teps filename
+
+http://plantuml.com/sequence-diagram

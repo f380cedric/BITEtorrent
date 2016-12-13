@@ -1,5 +1,37 @@
 @startuml
 
-	"Charlie\nCLIENT" as Charlie -> "Thread 1\nSend to Alice" : new
+	activate Charlie
+	Charlie -> "Thread 1\n(Send to Alice)" as T1: new
+	activate T1
+	Charlie -> "Thread 2\n(Send to Bob)" as T2: new
+	activate T2
+
+	note left: Single Chunk\nNo error
+	T1 -> Charlie  : qA.get()
+	T1 -> "Alice\nPEER" as Alice: GET_CHUNK
+	activate Alice
+	activate "Bob\nPEER"
+	Alice -> T1 : CHUNK
+	T1 -> Charlie : qA.taskDone()
+
+	note left: Multi Chunk\nNo error
+	T1 -> Charlie  : qAB.get()
+	T1 -> "Alice\nPEER" as Alice: GET_CHUNK
+	Alice -> T1 : CHUNK
+	T1 -> Charlie : qAB.taskDone()
+
+	note left: Multi Chunk\nNot found Error
+	T1 -> Charlie  : qAB.get()
+	T1 -> "Alice\nPEER" as Alice: GET_CHUNK
+	Alice -> T1 : NOT FOUND
+	T1 -> Charlie : qB.taskDone()
+
+	box "CLIENT" #LightBlue
+		participant Charlie
+		participant T1
+		participant T2
+	end box
+	participant Alice
+	participant "Bob\nPEER"
 
 @enduml
