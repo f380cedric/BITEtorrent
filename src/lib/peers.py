@@ -72,21 +72,21 @@ class peers:
                 if len(data) == length:
 
                     break
-            if not peers.check_message(data): #INVALID_MESSAGE_FORMAT
-                conn.send(peers.generate_error(0))
+            if not self.check_message(data): #INVALID_MESSAGE_FORMAT
+                conn.send(self.generate_error(0))
                 print('Error #0 : invalid message format')
-            elif not peers.is_get_chunck(data): #ERROR INVALID_REQUEST
-                conn.send(peers.generate_error(1))
+            elif not self.is_get_chunck(data): #ERROR INVALID_REQUEST
+                conn.send(self.generate_error(1))
                 print('Error #1 : invalid request')
 
-            elif not self.check_chunk(peers.chunk_hash(data)): #ERROR CHUNK_NOT_FOUND
-                conn.send(peers.generate_error(2))
+            elif not self.check_chunk(self.chunk_hash(data)): #ERROR CHUNK_NOT_FOUND
+                conn.send(self.generate_error(2))
                 print('Error #2 : chunk not found')
 
             else:
-                print('Request received for chunk', peers.chunk_hash(data))
-                print('sent: ',len(self.generate_chunk_message(peers.chunk_hash(data))))
-                conn.send(self.generate_chunk_message(peers.chunk_hash(data)))
+                print('Request received for chunk', self.chunk_hash(data))
+                print('sent: ',len(self.generate_chunk_message(self.chunk_hash(data))))
+                conn.send(self.generate_chunk_message(self.chunk_hash(data)))
                 print('Chunk sent')
         conn.close()
         return
