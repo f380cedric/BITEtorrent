@@ -1,5 +1,7 @@
 import sys
-from lib.client import *
+from lib.client1 import client1
+from lib.client2 import client2
+from lib.client3 import client3
 
 if len(sys.argv) < 2:
     print('Error: missing step number')
