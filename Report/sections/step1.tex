@@ -27,3 +27,22 @@ Two threads are created so that the chunks are requested and downloaded from Ali
 
 
 \subsection{Sequence diagram}
+
+A simplified version of the sequence diagram of the step 1 code is shown in Figure \ref{fig:step1}. It can be seen that the client uses two threads, each dedicated to the communication with one peer. The interaction with the second peer (Bob) are not shown for sake of clarity, since they are very similar to those concerning the first peer (Alice).
+
+Three specific cases are described : 
+
+\begin{itemize}
+	\item Single chunk, no error : the thread gets the chunk to ask in the queue qA, which is filled with chunks only owned by Alice. It sends a request to the corresponding peer. If no error occurs, it tells the queue that the chunk was correctly received.
+	
+	\item \textit{Multi Chunk}, no error : the thread has finished to ask for chunks listed in qA, and is now getting them for the queue qAB, containing chunks that are supposed to be owned by both peers. The follow-up is the same as in the previous case.
+	
+	\item \textit{Multi Chunk}, not found error : if the thread is asking for a chunk listed in qAB but Alice responds that she does not actually own it, it is concluded that the other peer (Bob) owns it. It will thus add the given chunk in qB, so that the thread 2 will ask Bob for it.
+\end{itemize}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{img/step1.eps}
+	\caption{Sequence diagram of step 1}
+	\label{fig:step1}
+\end{figure}
