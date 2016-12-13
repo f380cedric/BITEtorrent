@@ -4,6 +4,8 @@ This step consists of the addition of the tracker. It will provide the client th
 
 \subsection{Proposed solution}
 
+The \texttt{tracker} class now implements the reading of the configuration file as the client did in step 1, in order to know the addresses, port and chunks of the peers.
 
+When a request is sent by the client to the tracker, all the file information is sent in a message. According to the content of this message, the list of chunks are placed in the adequate queues. The follow-up is exactly the same as it was in step 1. 
 
 \subsection{Sequence diagram}
