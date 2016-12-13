@@ -5,7 +5,7 @@ import struct
 import threading
 import queue
 
-class client():
+class client1():
     def __init__(self,name):
         self.name = name
         self.lock= {'alice':threading.Lock(), 'bob' : threading.Lock()}
@@ -26,7 +26,7 @@ class client():
                 else:
                     self.chunks[dic] = queue.Queue()
                     self.chunks[dic].put(config['chunks'][key])
-        #self.lock
+
     def start(self):
         thread_alice = threading.Thread(target=self.receptor,args = ['alice','bob'])
         thread_bob = threading.Thread(target=self.receptor, args = ['bob','alice'])
@@ -39,25 +39,6 @@ class client():
             self.chunks[key].put(None)
         thread_bob.join()
         thread_alice.join()
-
-        """
-        ...lock alice
-
-        ...lock bob
-
-        if ...
-            break
-        """
-
-        #while True:
-        # lock.acquire()
-        # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as self.s:
-        #     # JUST FOR TESTING
-        #     self.s.connect(self.addresses[self.chunks['6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8'][0]])
-        #     result = self.chunk_request('6b14c28263c0b81a4bb70ddbc3c504be5bc8f4e8',self.addresses[self.chunks['6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8'][0]])
-        #     if struct.unpack("!BBHLHH",result)[1] == 6 :
-        #         self.chunk_request('6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8',self.addresses[self.chunks['6e14c28263c0b81a4bb70ddbc3c504be5bc8f4e8'][0]])
-        # lock.release()
 
     def receptor(self,name,other_peer):
         address = self.addresses[name]
@@ -79,6 +60,8 @@ class client():
                         break
                     else:
                         print(name,len(result),chunk_hash)
+                        with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'wb') as file:
+                            file.write(result)
                         self.chunks[name].task_done()
                 except queue.Empty as e:
                     try:
