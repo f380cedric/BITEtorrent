@@ -1,0 +1,5 @@
+@startuml
+
+	"Charlie\nCLIENT" as Charlie -> "Thread 1\nSend to Alice" : new
+
+@enduml
