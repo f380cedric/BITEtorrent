@@ -1,3 +1,1 @@
-In a terminal, type :
-
-ava -jar plantuml.jar -teps filename
+java -jar plantuml.jar -teps step1.txt -o "../Report/img"
