@@ -51,7 +51,7 @@ class client2():
                     if chunk_hash is None:
                         break
                     result = self.chunk_request(chunk_hash, s)
-                    if client.is_chunck_not_found(result):
+                    if self.is_chunck_not_found(result):
                         print('Chunk not found in',name,'directory')
                         print('Chunk will be added to',other_peer,'queue')
                         self.chunks[other_peer].put(chunk_hash)
