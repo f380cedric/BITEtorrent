@@ -1,4 +1,4 @@
-import lib
+from lib.peers import peers
 
-alice = lib.peers('alice')
+alice = peers('alice')
 alice.start()
