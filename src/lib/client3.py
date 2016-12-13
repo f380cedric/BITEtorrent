@@ -5,7 +5,7 @@ import struct
 import threading
 import queue
 
-class client1():
+class client3():
     def __init__(self,name):
         self.name = name
         self.lock= {'alice':threading.Lock(), 'bob' : threading.Lock()}
