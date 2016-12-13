@@ -106,3 +106,8 @@ class client():
         message_content = struct.pack(fmt_content,bytes.fromhex(chunk_hash))
 
         return header+message_content
+
+    @staticmethod
+    def is_chunck(message):
+        """ check the message, returns True if the message type is 5 (chunk) """
+        return (struct.unpack("!BBHL",message[0:8])[1] == 4)
