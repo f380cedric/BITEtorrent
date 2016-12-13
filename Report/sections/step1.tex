@@ -9,6 +9,8 @@ Knowing the message format used in the project\footnote{\url{https://github.com/
 
 Using object-oriented Python programming, classes \texttt{peers} and \texttt{client} have been created. Alice and Bob are thus \texttt{peers} objects and Charlie is a \texttt{client} object.
 
+All the data transfer between the peers and the clients are handled using TCP to ensure that every requested chunk is correctly transmitted (provided a peer owns it).
+
 \subsubsection{Peers}
 
 The way peers are implemented is quite straightforward. When instantiated, the peer opens a socket and stays idle while waiting for a connection. When a connection is received from the client, a single thread by peer is launched.

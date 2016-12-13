@@ -89,4 +89,10 @@ ENV/
 # Rope project settings
 .ropeproject
 
-# Custom
+# LaTeX compile files
+.aux
+.lof
+.log
+.out
+.gz
+.toc
