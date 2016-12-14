@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import sys
 from lib.client1 import client1
 from lib.client2 import client2
