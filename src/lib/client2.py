@@ -13,7 +13,7 @@ class client2:
         config = configparser.ConfigParser()
         config.read('../config/peers.ini')
         self.tracker = (config['tracker']['ip_address'], int(config['tracker']['port_number']))
-
+        #self.tracker = ('164.15.76.104', 8000)
     def tracker_com(self):
         """ Send a GET_FILE_INFO message. Return the FILE_INFO message. """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -48,8 +48,7 @@ class client2:
         for key in self.chunks[0]:
             th = threading.Thread(target=self.receptor,args = [key])
             th.start()
-        while not self.providers == {}:
-            pass
+        self.chunk_queue.join()
         for key in self.chunks[0]:
             self.chunks[0][key].put(None)
 
@@ -92,6 +91,10 @@ class client2:
                         if peer not in self.chunks[0]:
                             self.chunks[0][peer] = queue.Queue()
 
+        self.chunk_queue = queue.Queue()
+        list(map(self.chunk_queue.put, self.providers.keys()))
+
+
     def get_file_info(self):
         """ Generate the GET_FILE_INFO message. """
         return struct.pack("!BBHL",1,2,0,2)
@@ -131,7 +134,7 @@ class client2:
                     print(name,len(result),chunk_hash)
                     with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'wb') as file:
                         file.write(self.content(result))
-                        del self.providers[chunk_hash]
+                        self.chunk_queue.task_done()
 
     def chunk_request(self, chunk_hash, sock):
         """ Send a GET_CHUNK message to the peer.
@@ -160,7 +163,7 @@ class client2:
         """ Generate the GET_CHUNK message. """
         if os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin"):
             return 0
-        return struct.pack("!BBHL20S",1,4,0,7,bytes.fromhex(chunk_hash))
+        return struct.pack("!BBHL20s",1,4,0,7,bytes.fromhex(chunk_hash))
 
     @staticmethod
     def is_chunck_not_found(message):
