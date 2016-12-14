@@ -5,15 +5,12 @@ import struct
 import threading
 import queue
 import binascii
-from lib.client import client
-class client2(client):
-    def __init__(self,name):
-        super().__init__(name)
-        self.mychunks = os.listdir('../chunks/' +name)
-        config = configparser.ConfigParser()
-        config.read('../config/peers.ini')
-        self.tracker = (config['tracker']['ip_address'], int(config['tracker']['port_number']))
 
+class clientonline:
+    def __init__(self,name):
+        self.name = name
+        self.mychunks = os.listdir('../chunks/' +name)
+        self.tracker = ('164.15.76.104', 8000)
     def tracker_com(self):
         """ Send a GET_FILE_INFO message. Return the FILE_INFO message. """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -48,18 +45,22 @@ class client2(client):
         for key in self.chunks[0]:
             th = threading.Thread(target=self.receptor,args = [key])
             th.start()
-        while not self.providers == {}:
-            pass
+        self.chunk_queue.join()
         for key in self.chunks[0]:
             self.chunks[0][key].put(None)
 
     def unpack_file_info(self, data):
         """ Take the FILE_INFO as an argument. """
+        file = configparser.ConfigParser()
+        list(map(file.add_section, ['description', 'chunks']))
         self.chunks = [{},{}]
         self.providers = {}
-        data = data[8::]
+        data = data[8::]    # REMOVE HEADER
         chunks_count, filename_length = map(int,struct.unpack('!2H', data[:4]))
         self.number_of_chunks = chunks_count
+        filename = struct.unpack('%ds' %filename_length, data[4:4+filename_length])[0].decode('UTF-8')
+        file['description'] = {'filename': filename,
+        'chunks_count' : chunks_count}
         data = data[filename_length + filename_length%4 + 4 ::]
         chunk_info_len, offset = 0, 0
         for i in range(chunks_count):
@@ -67,6 +68,7 @@ class client2(client):
             chunk_hash, peers_count = struct.unpack('!20sH', data[offset:offset+22])
             chunk_info_len = 24 + peers_count * 8
             chunk_hash = bytes.decode(binascii.hexlify(chunk_hash))
+            file.set('chunks', str(i), chunk_hash)
             if chunk_hash+".bin" not in self.mychunks:
                 self.providers[chunk_hash] = []
                 peers = ()
@@ -91,6 +93,12 @@ class client2(client):
                     for peer in peers:
                         if peer not in self.chunks[0]:
                             self.chunks[0][peer] = queue.Queue()
+
+        self.chunk_queue = queue.Queue()
+        list(map(self.chunk_queue.put, self.providers.keys()))
+        with open("../config/file1.ini",'w') as fileini:
+                        file.write(fileini)
+
 
     def get_file_info(self):
         """ Generate the GET_FILE_INFO message. """
@@ -131,7 +139,7 @@ class client2(client):
                     print(name,len(result),chunk_hash)
                     with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'wb') as file:
                         file.write(self.content(result))
-                        del self.providers[chunk_hash]
+                        self.chunk_queue.task_done()
 
     def chunk_request(self, chunk_hash, sock):
         """ Send a GET_CHUNK message to the peer.
@@ -160,7 +168,7 @@ class client2(client):
         """ Generate the GET_CHUNK message. """
         if os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin"):
             return 0
-        return struct.pack("!BBHL20S",1,4,0,7,bytes.fromhex(chunk_hash))
+        return struct.pack("!BBHL20s",1,4,0,7,bytes.fromhex(chunk_hash))
 
     @staticmethod
     def is_chunck_not_found(message):
@@ -179,3 +187,6 @@ class client2(client):
         """ Take a CHUNK message in argument and return only the chunk_content """
         chunk_content_length = struct.unpack("!BBHL20sL",message[0:32])[5]
         return message[32:32+chunk_content_length]
+
+charlie = clientonline('charlie')
+charlie.start()

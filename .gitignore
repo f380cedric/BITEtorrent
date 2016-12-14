@@ -96,3 +96,5 @@ ENV/
 *.out
 *.gz
 *.toc
+
+*.mp4

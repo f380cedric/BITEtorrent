@@ -91,6 +91,7 @@ class tracker:
         config.read('../config/file.ini')
         chunks_count = int(config['description']['chunks_count'])
         filename = config['description']['filename'].encode("UTF-8")
+        print(filename)
         filename_length = len(filename)
         padding = filename_length%4
         fmt_content = "!2H%ds%ds" %(filename_length,padding)

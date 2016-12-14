@@ -20,7 +20,7 @@ class MergeChunks:
 
     def read_config_file(self):
         config = configparser.ConfigParser()
-        config.read(os.path.join(config_path, 'file.ini'))
+        config.read(os.path.join(config_path, 'file1.ini'))
         self.filename = config.get('description', 'filename')
         chunks_count = config.getint('description', 'chunks_count')
         self.chunks = [config.get('chunks', str(i)) for i in range(chunks_count)]
