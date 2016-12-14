@@ -15,6 +15,7 @@ class client2:
         self.tracker = (config['tracker']['ip_address'], int(config['tracker']['port_number']))
 
     def tracker_com(self):
+        """ Send a GET_FILE_INFO message. Return the FILE_INFO message. """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.connect(self.tracker)
@@ -38,6 +39,7 @@ class client2:
         return data
 
     def start(self):
+        """ Start the client """
         data = self.tracker_com()
         if data == False:
             print('ERROR NO DATA')
@@ -52,6 +54,7 @@ class client2:
             self.chunks[0][key].put(None)
 
     def unpack_file_info(self, data):
+        """ Take the FILE_INFO as an argument. """
         self.chunks = [{},{}]
         self.providers = {}
         data = data[8::]
@@ -88,7 +91,9 @@ class client2:
                     for peer in peers:
                         if peer not in self.chunks[0]:
                             self.chunks[0][peer] = queue.Queue()
+
     def get_file_info(self):
+        """ Generate the GET_FILE_INFO message. """
         return struct.pack("!BBHL",1,2,0,2)
 
     def receptor(self,name,):
@@ -129,7 +134,10 @@ class client2:
                         del self.providers[chunk_hash]
 
     def chunk_request(self, chunk_hash, sock):
-        sock.send(self.chunk_message_generator(chunk_hash))
+        """ Send a GET_CHUNK message to the peer.
+            Return the received message. /!\ Can be ERROR or CHUNK.
+        """
+        sock.send(self.get_chunk_message_generator(chunk_hash))
         data = bytes()
         while len(data) < 8:
             result = sock.recv(524288)
@@ -148,20 +156,16 @@ class client2:
                 return False
         return data
 
-    def chunk_message_generator(self,chunk_hash):
+    def get_chunk_message_generator(self,chunk_hash):
+        """ Generate the GET_CHUNK message. """
         if os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin"):
             return 0
-        msg_length = 7
-        fmt_content = "!20s"
-
-        header = struct.pack("!BBHL",1,4,0,msg_length)
-        message_content = struct.pack(fmt_content,bytes.fromhex(chunk_hash))
-
-        return header+message_content
+        return struct.pack("!BBHL20S",1,4,0,7,bytes.fromhex(chunk_hash))
 
     @staticmethod
     def is_chunck_not_found(message):
-        """ check the message, returns True if:
+        """ Check if the message to determine if it is a CHUNK_NOT_FOUND.
+            Returns True if:
                 - the message type is 6 (ERROR)
                 - the error_code is 2 (CHUNK_NOT_FOUND) 
         """
@@ -172,6 +176,6 @@ class client2:
 
     @staticmethod
     def content(message):
-        """ Take a CHUNK message in argument and return only the chunk content """
+        """ Take a CHUNK message in argument and return only the chunk_content """
         chunk_content_length = struct.unpack("!BBHL20sL",message[0:32])[5]
         return message[32:32+chunk_content_length]
