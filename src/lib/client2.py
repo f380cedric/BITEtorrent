@@ -1,19 +1,73 @@
 import os
+import struct
 import socket
 import configparser
-import struct
 import threading
 import queue
 import binascii
+from lib.client import client
 
-class client2:
+class client2(client):
     def __init__(self,name):
-        self.name = name
+        super().__init__(name)
         self.mychunks = os.listdir('../chunks/' +name)
         config = configparser.ConfigParser()
         config.read('../config/peers.ini')
         self.tracker = (config['tracker']['ip_address'], int(config['tracker']['port_number']))
         #self.tracker = ('164.15.76.104', 8000)
+
+    def start(self):
+        """ Start the client """
+        data = self.tracker_com()
+        if data == False:
+            print('ERROR NO DATA')
+            return
+        self.unpack_file_info(data)
+        for key in self.chunks[0]:
+            th = threading.Thread(target=self.receptor,args = [key])
+            th.start()
+        while not self.providers == {}:
+            pass
+        for key in self.chunks[0]:
+            self.chunks[0][key].put(None)
+
+    def receptor(self,name,):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.connect(name)
+            while True:
+                chunk_hash = False
+                while chunk_hash == False:
+                    try:
+                        chunk_hash = self.chunks[0][name].get_nowait()
+                    except queue.Empty:
+                        for key in self.chunks[1]:
+                            try:
+                                if name in key:
+                                    self.chunks[0][name].put(self.chunks[1][key].get_nowait())
+                                    break
+                            except queue.Empty:
+                                pass
+                if chunk_hash is None:
+                    break
+                result = self.chunk_request(chunk_hash, s)
+                if self.is_chunck_not_found(result):
+                    print('Chunk not found in',name,'directory')
+                    providers = self.providers[chunk_hash]
+                    providers.remove(name)
+                    if len(providers) == 0:
+                        print('ERROR NO PROVIDER')
+                        exit()
+                    print('Chunk will be added to',providers[0],'queue')
+                    self.chunks[0][providers[0]].put(chunk_hash)
+                elif result == False:
+                    break
+                else:
+                    print(name,len(result),chunk_hash)
+                    with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'wb') as file:
+                        file.write(self.content(result))
+                        del self.providers[chunk_hash]
+
     def tracker_com(self):
         """ Send a GET_FILE_INFO message. Return the FILE_INFO message. """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -38,6 +92,7 @@ class client2:
                     return False
         return data
 
+<<<<<<< Updated upstream
     def start(self):
         """ Start the client """
         data = self.tracker_com()
@@ -52,6 +107,8 @@ class client2:
         for key in self.chunks[0]:
             self.chunks[0][key].put(None)
 
+=======
+>>>>>>> Stashed changes
     def unpack_file_info(self, data):
         """ Take the FILE_INFO as an argument. """
         self.chunks = [{},{}]
@@ -89,6 +146,7 @@ class client2:
                         self.chunks[1][peers].put(chunk_hash)
                     for peer in peers:
                         if peer not in self.chunks[0]:
+<<<<<<< Updated upstream
                             self.chunks[0][peer] = queue.Queue()
 
         self.chunk_queue = queue.Queue()
@@ -182,3 +240,6 @@ class client2:
         """ Take a CHUNK message in argument and return only the chunk_content """
         chunk_content_length = struct.unpack("!BBHL20sL",message[0:32])[5]
         return message[32:32+chunk_content_length]
+=======
+                            self.chunks[0][peer] = queue.Queue()
+>>>>>>> Stashed changes

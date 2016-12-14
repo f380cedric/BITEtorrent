@@ -4,10 +4,11 @@ import configparser
 import struct
 import threading
 import queue
+from lib.client import client
 
-class client1:
+class client1(client):
     def __init__(self,name):
-        self.name = name
+        super().__init__(name)
         self.lock= {'alice':threading.Lock(), 'bob' : threading.Lock()}
         config = configparser.ConfigParser()
         config.read('../config/peers.ini')
@@ -69,50 +70,3 @@ class client1:
                         self.chunks['alice, bob'].task_done()
                     except queue.Empty as e:
                         pass
-
-    def chunk_request(self, chunk_hash, sock):
-        sock.send(self.chunk_message_generator(chunk_hash))
-        data = bytes()
-        while len(data) < 8:
-            result = sock.recv(524288)
-            data += result
-            if not result:
-                sock.close()
-                print('Connection close')
-                return False
-        length = int(struct.unpack("!BBHL",data[0:8])[3])*4
-        while len(data) < length:
-            result = sock.recv(524288)
-            data += result
-            if not result:
-                sock.close()
-                print('Connection close')
-                return False
-        return data
-    def chunk_message_generator(self,chunk_hash):
-        if os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin"):
-            return 0
-        msg_length = 7
-        fmt_content = "!20s"
-
-        header = struct.pack("!BBHL",1,4,0,msg_length)
-        message_content = struct.pack(fmt_content,bytes.fromhex(chunk_hash))
-
-        return header+message_content
-
-    @staticmethod
-    def is_chunck_not_found(message):
-        """ check the message, returns True if:
-                - the message type is 6 (ERROR)
-                - the error_code is 2 (CHUNK_NOT_FOUND) 
-        """
-        if (struct.unpack("!BBHL",message[0:8])[1] == 6):
-            if (struct.unpack("!BBHLHH",message)[4] == 2):
-                return True
-        return False
-
-    @staticmethod
-    def content(message):
-        """ Take a CHUNK message in argument and return only the chunk content """
-        chunk_content_length = struct.unpack("!BBHL20sL",message[0:32])[5]
-        return message[32:32+chunk_content_length]
