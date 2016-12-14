@@ -7,7 +7,9 @@ import configparser
 import threading
 import queue
 import binascii
+import math
 from lib.client import client
+from merge_chunks import MergeChunks
 
 class client2(client):
     def __init__(self,name):
@@ -19,17 +21,25 @@ class client2(client):
 
     def start(self):
         """ Start the client """
+        print('\nWelcome to BITEtorrent\n\nContacting tracker:')
         data = self.tracker_com()
         if data == False:
             print('ERROR NO DATA')
             return
+        print('Done\n\nStarting download:\n')
         self.unpack_file_info(data)
+        th = []
         for key in self.chunks[0]:
-            th = threading.Thread(target=self.receptor,args = [key])
-            th.start()
+            th.append(threading.Thread(target=self.receptor,args = [key]))
+        [i.start() for i in th]
         self.chunk_queue.join()
         for key in self.chunks[0]:
             self.chunks[0][key].put(None)
+        [i.join() for i in th]
+        print('\nDone\n\nMerging chunks:')
+        MergeChunks()
+        print('') #Fancy print
+
 
 
     def receptor(self,name,):
@@ -64,11 +74,11 @@ class client2(client):
                 elif result == False:
                     break
                 else:
-                    print(name,len(result),chunk_hash)
                     with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'wb') as file:
                         file.write(self.content(result))
                         self.chunk_queue.task_done()
-
+                        self.chunk_queue.get()
+                    print('[',math.ceil((self.number_of_chunks - self.chunk_queue.qsize())*100/self.number_of_chunks),'%] ',name,' ',len(result),' ',chunk_hash,sep='')
     def tracker_com(self):
         """ Send a GET_FILE_INFO message. Return the FILE_INFO message. """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
