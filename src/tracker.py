@@ -142,3 +142,6 @@ class tracker:
         print(struct.pack("!BBHLHH",ver,msg_type,0,msg_length,error_code,0))
         return struct.pack("!BBHLHH",ver,msg_type,0,msg_length,error_code,0)
         #return bytearray([1,6,0,0,0,0,0,3,error_code>>8&0xFF,error_code&0xFF,0,0])
+
+tracker = tracker()
+tracker.start()

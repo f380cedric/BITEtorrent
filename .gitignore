@@ -97,4 +97,7 @@ ENV/
 *.gz
 *.toc
 
+# fucking bin files who tired the shit out of me
+*.bin
+
 *.mp4
