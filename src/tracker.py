@@ -21,6 +21,26 @@ class tracker:
         """ Start the peers to listen to connection """
         print('Welcome to tracker Server\nSoftware developped by ChrisSoft Inc.')
         print('Server is lauched as',self.name)
+        # with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        #     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        #     s.bind((self.ip, 9000))
+        #     data = bytes()
+        #     print('hi')
+        #     while len(data) < 8:
+        #         result, address = s.recvfrom(524288)
+        #         data += result
+        #         if not result:
+        #             print('Connection close')
+        #             break
+        #     print('ouf')
+        #     length = int(struct.unpack("!BBHL",data[0:8])[3])*4
+        #     while len(data) < length:
+        #         esult, address = s.recvfrom(524288)
+        #         data += result
+        #         if not result:
+        #             print('Connection close')
+        #             break
+        #     print(data)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((self.ip, self.port))
