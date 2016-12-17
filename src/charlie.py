@@ -4,6 +4,7 @@ import sys
 from lib.client1 import client1
 from lib.client2 import client2
 from lib.client3 import client3
+from lib.clientonline import clientonline
 
 if len(sys.argv) < 2:
     print('Error: missing step number')
@@ -16,6 +17,8 @@ elif step == 2:
     charlie = client2('charlie')
 elif step == 3:
     charlie = client3('charlie')
+elif step == 4:
+    charlie = clientonline('charlie')
 else:
     print('Error: invalid step number')
     sys.exit(1)
