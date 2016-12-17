@@ -1,14 +1,11 @@
 #!/usr/bin/python3
 
-import os
-import socket
 import configparser
-import struct
 import threading
 import queue
-from lib.client import client
+from lib.client import Client
 
-class client1(client):
+class Clientv1(Client):
     def __init__(self,name):
         super().__init__(name)
         self.lock= {'alice':threading.Lock(), 'bob' : threading.Lock()}

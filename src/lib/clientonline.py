@@ -19,7 +19,7 @@ class clientonline:
             s.send(self.get_file_info())
             data = bytes()
             while len(data) < 8:
-                result = s.recv(524288)
+                result = s.recv(2048)
                 data += result
                 if not result:
                     s.close()
@@ -27,7 +27,7 @@ class clientonline:
                     return False
             length = int(struct.unpack("!BBHL",data[0:8])[3])*4
             while len(data) < length:
-                result = s.recv(524288)
+                result = s.recv(2048)
                 data += result
                 if not result:
                     s.close()
@@ -148,7 +148,7 @@ class clientonline:
         sock.send(self.get_chunk_message_generator(chunk_hash))
         data = bytes()
         while len(data) < 8:
-            result = sock.recv(524288)
+            result = sock.recv(2048)
             data += result
             if not result:
                 sock.close()
@@ -156,7 +156,7 @@ class clientonline:
                 return False
         length = int(struct.unpack("!BBHL",data[0:8])[3])*4
         while len(data) < length:
-            result = sock.recv(524288)
+            result = sock.recv(2048)
             data += result
             if not result:
                 sock.close()

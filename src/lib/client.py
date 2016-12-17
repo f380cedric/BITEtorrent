@@ -1,42 +1,26 @@
 import struct
 import os
+from lib.super import Super
 
-class client():
-    def __init__(self,name):
-        self.name = name
+class Client(Super):
 
-    def get_file_info(self):
+    @staticmethod
+    def get_file_info():
         """ Generate the GET_FILE_INFO message. """
         return struct.pack("!BBHL",1,2,0,2)
 
-    def get_chunk_message_generator(self,chunk_hash):
+    @staticmethod
+    def get_chunk_message_generator(chunk_hash):
         """ Generate the GET_CHUNK message. """
-        if os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin"):
-            return 0
         return struct.pack("!BBHL20s",1,4,0,7,bytes.fromhex(chunk_hash))
 
-    def chunk_request(self, chunk_hash, sock):
+    @staticmethod
+    def chunk_request(chunk_hash, sock):
         """ Send a GET_CHUNK message to the peer.
             Return the received message. /!\ Can be ERROR or CHUNK.
         """
-        sock.send(self.get_chunk_message_generator(chunk_hash))
-        data = bytes()
-        while len(data) < 8:
-            result = sock.recv(524288)
-            data += result
-            if not result:
-                sock.close()
-                print('Connection close')
-                return False
-        length = int(struct.unpack("!BBHL",data[0:8])[3])*4
-        while len(data) < length:
-            result = sock.recv(524288)
-            data += result
-            if not result:
-                sock.close()
-                print('Connection close')
-                return False
-        return data
+        sock.send(client.get_chunk_message_generator(chunk_hash))
+        return self.receive()
 
     @staticmethod
     def is_chunck_not_found(message):
@@ -45,8 +29,7 @@ class client():
                 - the message type is 6 (ERROR)
                 - the error_code is 2 (CHUNK_NOT_FOUND) 
         """
-        if (struct.unpack("!BBHL",message[0:8])[1] == 6):
-            if (struct.unpack("!BBHLHH",message)[4] == 2):
+        if (struct.unpack("!BBHL",message[0:8])[1] == 6) & (struct.unpack("!BBHLHH",message)[4] == 2):
                 return True
         return False
 

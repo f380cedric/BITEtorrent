@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from lib.peers import peers
+from lib.peer import Peer
 
-bob = peers('bob')
+bob = Peer('bob')
 bob.start()

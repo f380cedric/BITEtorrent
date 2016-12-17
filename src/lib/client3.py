@@ -7,7 +7,7 @@ import queue
 import binascii
 import time
 
-class client3:
+class Clientv3:
     def __init__(self,name):
         self.name = name
         self.mychunks = os.listdir('../chunks/' +name)
@@ -28,7 +28,7 @@ class client3:
             s.send(self.get_file_info())
             data = bytes()
             while len(data) < 8:
-                result = s.recv(524288)
+                result = s.recv(2048)
                 data += result
                 if not result:
                     s.close()
@@ -36,7 +36,7 @@ class client3:
                     return False
             length = int(struct.unpack("!BBHL",data[0:8])[3])*4
             while len(data) < length:
-                result = s.recv(524288)
+                result = s.recv(2048)
                 data += result
                 if not result:
                     s.close()
@@ -142,7 +142,7 @@ class client3:
         sock.send(self.chunk_message_generator(chunk_hash))
         data = bytes()
         while len(data) < 8:
-            result = sock.recv(524288)
+            result = sock.recv(2048)
             data += result
             if not result:
                 sock.close()
@@ -150,7 +150,7 @@ class client3:
                 return False
         length = int(struct.unpack("!BBHL",data[0:8])[3])*4
         while len(data) < length:
-            result = sock.recv(524288)
+            result = sock.recv(2048)
             data += result
             if not result:
                 sock.close()

@@ -32,19 +32,19 @@ import struct
 import binascii
 import math
 import threading
+from lib.super import Super
 
-class peers:
+class Peer(Super):
     def __init__(self,name):
+        super().__init__(name)
         config = configparser.ConfigParser()
         config.read('../config/peers.ini')
-        self.name = name
         self.ip = config[name]['ip_address']
         self.port = int(config[name]['port_number'])
 
     def start(self):
         """ Start the peers to listen to connection """
-        print('Welcome to Peers Server\nSoftware developped by ChrisSoft Inc.')
-        print('Server is lauched as',self.name)
+        super().start()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((self.ip, self.port))
@@ -59,18 +59,9 @@ class peers:
 
     def handle_client(self, conn):
         while True:
-            data = bytes()
-            while True:
-                result = conn.recv(524288)
-                data += result
-                if not result:
-                    conn.close()
-                    print('Connection close')
-                    return
-                length = int(struct.unpack("!BBHL",data[0:8])[3])*4
-                if len(data) == length:
-
-                    break
+            data = self.receive(conn)
+            if data == False:
+                return
             if not self.check_message(data): #INVALID_MESSAGE_FORMAT
                 conn.send(self.generate_error(0))
                 print('Error #0 : invalid message format')
@@ -89,6 +80,7 @@ class peers:
                 print('Chunk sent')
         conn.close()
         return
+
     def check_chunk(self,chunk_hash):
         """ Check if the peer have the requested chunk """
         return os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin")
@@ -107,36 +99,13 @@ class peers:
 
         return header+message_content
 
-    @staticmethod
-    def check_message(message):
-        """ Check if the message is valid """
-        check_chunk = False
-        if not len(message)%4:
-            print('Multiple of 4 : OK')
-        # Multiple of 4
-            if struct.unpack("!BBHL",message[0:8])[0] == 1:
-                print('Version is one : OK')
-            # Version is one
-                if (struct.unpack("!BBHL",message[0:8])[3]) == len(message)/4:
-                    print('Correct size : OK')
-                # body is correct size wrt msg_length
-                    check_chunk = True
-        return check_chunk
+   
 
     @staticmethod
     def is_get_chunck(message):
         """ Check the request to see if it is a GET_CHUNK """
         return (struct.unpack("!BBHL",message[0:8])[1] == 4) & (struct.unpack("!BBHL",message[0:8])[3] == 7)
 
-    @staticmethod
-    def generate_error(error_code):
-        """ Generate the ERROR message """
-        ver = 1
-        msg_type = 6
-        msg_length = 3
-        print(struct.pack("!BBHLHH",ver,msg_type,0,msg_length,error_code,0))
-        return struct.pack("!BBHLHH",ver,msg_type,0,msg_length,error_code,0)
-        #return bytearray([1,6,0,0,0,0,0,3,error_code>>8&0xFF,error_code&0xFF,0,0])
 
     @staticmethod
     def chunk_hash(message_get_chunk):

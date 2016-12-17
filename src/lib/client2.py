@@ -8,10 +8,10 @@ import threading
 import queue
 import binascii
 import math
-from lib.client import client
+from lib.client import Client
 from merge_chunks import MergeChunks
 
-class client2(client):
+class Clientv2(Client):
     def __init__(self,name):
         super().__init__(name)
         self.mychunks = os.listdir('../chunks/' +name)
@@ -20,6 +20,7 @@ class client2(client):
         self.tracker = (config['tracker']['ip_address'], int(config['tracker']['port_number']))
 
     def start(self):
+        super().start()
         """ Start the client """
         print('\nWelcome to BITEtorrent\n\nContacting tracker:')
         data = self.tracker_com()
@@ -87,7 +88,7 @@ class client2(client):
             s.send(self.get_file_info())
             data = bytes()
             while len(data) < 8:
-                result = s.recv(524288)
+                result = s.recv(2048)
                 data += result
                 if not result:
                     s.close()
@@ -95,7 +96,7 @@ class client2(client):
                     return False
             length = int(struct.unpack("!BBHL",data[0:8])[3])*4
             while len(data) < length:
-                result = s.recv(524288)
+                result = s.recv(2048)
                 data += result
                 if not result:
                     s.close()
