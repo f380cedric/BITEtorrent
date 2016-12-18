@@ -3,6 +3,7 @@ import struct
 
 class Super:
 	BUFFER_SIZE = 2048
+
 	def __init__(self, name):
 		self.name = name
 
