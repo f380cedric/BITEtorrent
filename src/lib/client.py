@@ -52,17 +52,21 @@ class Client(Super):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.connect(name)
+            my_queue = self.chunks[0][name]
+            com_queues = []
+            for key in self.chunks[1]:
+                if name in key:
+                    com_queues.append(self.chunks[1][key])
             while True:
                 chunk_hash = False
                 while chunk_hash == False:
                     try:
-                        chunk_hash = self.chunks[0][name].get_nowait()
+                        chunk_hash = my_queue.get_nowait()
                     except queue.Empty:
-                        for key in self.chunks[1]:
+                        for com in com_queues:
                             try:
-                                if name in key:
-                                    chunk_hash = self.chunks[1][key].get_nowait()
-                                    break
+                                chunk_hash = com.get_nowait()
+                                break
                             except queue.Empty:
                                 pass
                 if chunk_hash is None:
@@ -70,18 +74,23 @@ class Client(Super):
                 result = self.chunk_request(chunk_hash, s)
                 if result == False:
                     print('peer not responding')
-                    self.chunks[0][name].put(chunk_hash)
+                    my_queue.put(chunk_hash)
                 elif self.is_type(result, 'chunk_not_found'):
                     print('Chunk not found in',name,'directory')
                     providers = self.providers[chunk_hash]
                     providers.remove(name)
                     if len(providers) == 0:
                         print('ERROR NO PROVIDER')
-                    print('Chunk will be added to',providers[0],'queue')
-                    self.chunks[0][providers[0]].put(chunk_hash)
+                    else:
+                        indice = 0
+                        for i in range(1,len(providers)):
+                            if len(chunks[0][providers[i]].qsize()) < len(chunks[0][providers[indice]].qsize()) :
+                                indice = i
+                            
+                        print('Chunk will be added to',providers[indice],'queue')
+                        self.chunks[0][providers[indice]].put(chunk_hash)
                 else:
                     with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'wb') as file:
-                        print(chunk_hash, len(result))
                         file.write(self.content(result))
                         self.chunk_queue.task_done()
                         self.chunk_queue.get()

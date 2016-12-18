@@ -15,7 +15,7 @@ class Clientv2(Client):
         config = configparser.ConfigParser()
         config.read('../config/peers.ini')
         self.tracker = (config['tracker']['ip_address'], int(config['tracker']['port_number']))
-        #self.tracker = ('164.15.76.104', 8000)
+        self.tracker = ('164.15.76.104', 8000)
 
     def start(self):
         """ Start the client """
