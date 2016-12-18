@@ -1,6 +1,8 @@
 @startuml
 
 	activate Charlie
+	activate "Alice\nPEER"
+	activate "Bob\nPEER"
 	Charlie -> "Thread 1\n(Send to Alice)" as T1: new
 	activate T1
 	Charlie -> "Thread 2\n(Send to Bob)" as T2: new
@@ -8,22 +10,20 @@
 
 	note left: Single Chunk\nNo error
 	T1 -> Charlie  : qA.get()
-	T1 -> "Alice\nPEER" as Alice: GET_CHUNK
-	activate Alice
-	activate "Bob\nPEER"
-	Alice -> T1 : CHUNK
+	T1 -> "Alice\nPEER": GET_CHUNK
+	"Alice\nPEER" -> T1 : CHUNK
 	T1 -> Charlie : qA.taskDone()
 
 	note left: Multi Chunk\nNo error
 	T1 -> Charlie  : qAB.get()
-	T1 -> "Alice\nPEER" as Alice: GET_CHUNK
-	Alice -> T1 : CHUNK
+	T1 -> "Alice\nPEER" : GET_CHUNK
+	"Alice\nPEER" -> T1 : CHUNK
 	T1 -> Charlie : qAB.taskDone()
 
 	note left: Multi Chunk\nNot found Error
 	T1 -> Charlie  : qAB.get()
-	T1 -> "Alice\nPEER" as Alice: GET_CHUNK
-	Alice -> T1 : NOT FOUND
+	T1 -> "Alice\nPEER" : GET_CHUNK
+	"Alice\nPEER" -> T1 : NOT FOUND
 	T1 -> Charlie : qB.taskDone()
 
 	box "CLIENT" #LightBlue
@@ -31,7 +31,7 @@
 		participant T1
 		participant T2
 	end box
-	participant Alice
+	participant "Alice\nPEER"
 	participant "Bob\nPEER"
 
 @enduml
