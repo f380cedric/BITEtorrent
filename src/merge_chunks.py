@@ -10,17 +10,17 @@ def chunk_path(chunk_hash):
     return os.path.join(chunks_path, 'charlie', chunk_hash + '.bin')
 
 class MergeChunks:
-    def __init__(self):
-        self.read_config_file()
+    def __init__(self,filepath):
+        self.read_config_file(filepath)
         if self.has_all_chunks():
             self.create_file()
             print('Done')
         else:
             print('Missing chunks')
 
-    def read_config_file(self):
+    def read_config_file(self,filepath):
         config = configparser.ConfigParser()
-        config.read(os.path.join(config_path, 'file.ini'))
+        config.read(os.path.join(config_path, filepath))
         self.filename = config.get('description', 'filename')
         chunks_count = config.getint('description', 'chunks_count')
         self.chunks = [config.get('chunks', str(i)) for i in range(chunks_count)]
