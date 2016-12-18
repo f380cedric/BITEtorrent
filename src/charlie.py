@@ -16,8 +16,6 @@ elif step == 2:
     charlie = Clientv2('charlie')
 elif step == 3:
     charlie = Clientv3('charlie')
-elif step == 4:
-    charlie = Clientonline('charlie')
 else:
     print('Error: invalid step number')
     sys.exit(1)
