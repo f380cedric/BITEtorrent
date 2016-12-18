@@ -38,7 +38,7 @@ class Client(Super):
         super().start()
         th = []
         for key in self.chunks[0]:
-            th.append(threading.Thread(target=self.receptor,args = [key]))
+            th.append(threading.Thread(target=self.receptor,args = [key], daemon = True))
         list(map(threading.Thread.start, th))
         self.chunk_queue.join()
         for key in self.chunks[0]:
