@@ -41,7 +41,7 @@ class Tracker(Super):
             if not self.check_message(data): #INVALID_MESSAGE_FORMAT
                 conn.send(self..generate_error(0))
                 print('Error #0 : invalid message format')
-            elif not self..is_get_file_info(data): #ERROR INVALID_REQUEST
+            elif not self..is_type(data,get_file_info): #ERROR INVALID_REQUEST
                 conn.send(self..generate_error(1))
                 print('Error #1 : invalid request')
             else:
@@ -80,12 +80,6 @@ class Tracker(Super):
         msg_length = 2 + len(message_content)//4
         header = struct.pack("!BBHL",1,5,0,msg_length)
         return header+message_content
-
-
-    @staticmethod
-    def is_get_file_info(message):
-        """ Check the request to see if it is a GET_FILE_INFO"""
-        return (struct.unpack("!BBHL",message[0:8])[1] == 2) & (struct.unpack("!BBHL",message[0:8])[3] == 2)
 
 
 

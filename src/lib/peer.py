@@ -65,7 +65,7 @@ class Peer(Super):
             if not self.check_message(data): #INVALID_MESSAGE_FORMAT
                 conn.send(self.generate_error(0))
                 print('Error #0 : invalid message format')
-            elif not self.is_get_chunck(data): #ERROR INVALID_REQUEST
+            elif not self.is_type(data,'get_chunck'): #ERROR INVALID_REQUEST
                 conn.send(self.generate_error(1))
                 print('Error #1 : invalid request')
 
@@ -98,13 +98,6 @@ class Peer(Super):
         message_content = struct.pack(fmt_content,bytes.fromhex(chunk_hash),chunk_content_length,content,bytes(padding))
 
         return header+message_content
-
-   
-
-    @staticmethod
-    def is_get_chunck(message):
-        """ Check the request to see if it is a GET_CHUNK """
-        return (struct.unpack("!BBHL",message[0:8])[1] == 4) & (struct.unpack("!BBHL",message[0:8])[3] == 7)
 
 
     @staticmethod
