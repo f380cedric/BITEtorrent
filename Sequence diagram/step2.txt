@@ -18,19 +18,19 @@
 	T1 -> Charlie  : qA.get()
 	T1 -> "Alice\nPEER": GET_CHUNK
 	"Alice\nPEER" -> T1 : CHUNK
-	T1 -> Charlie : qA.taskDone()
+	T1 -> Charlie : qTot.taskDone()
 
 	note left: Multi Chunk\nNo error
 	T1 -> Charlie  : qAB.get()
 	T1 -> "Alice\nPEER" : GET_CHUNK
 	"Alice\nPEER" -> T1 : CHUNK
-	T1 -> Charlie : qAB.taskDone()
+	T1 -> Charlie : qTot.taskDone()
 
 	note left: Multi Chunk\nNot found Error
 	T1 -> Charlie  : qAB.get()
 	T1 -> "Alice\nPEER" : GET_CHUNK
 	"Alice\nPEER" -> T1 : NOT FOUND
-	T1 -> Charlie : qB.taskDone()
+	T1 -> Charlie : qB.put()
 
 	box "CLIENT" #LightBlue
 		participant Charlie

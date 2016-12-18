@@ -1,0 +1,52 @@
+@startuml
+
+
+	activate Charlie
+	activate "Tracker\nThread UDP"
+	activate "Tracker\nThread TCP"
+	activate "Alice\nPEER"
+	activate "Bob\nPEER"
+
+	Charlie -> "Tracker\nThread UDP" : DISCOVER_TRACKER
+	"Tracker\nThread UDP" -> Charlie : TRACKER_INFO
+
+	Charlie -> "Tracker\nThread TCP" : GET_FILE_INFO
+	"Tracker\nThread TCP" -> Charlie : FILE_INFO
+
+	Charlie -> "Thread 1\n(Send to Alice)" as T1: new
+	activate T1
+	Charlie -> "Thread 2\n(Send to Bob)" as T2: new
+	activate T2
+
+	note left: Single Chunk\nNo error
+	T1 -> Charlie  : qA.get()
+	T1 -> "Alice\nPEER": GET_CHUNK
+	"Alice\nPEER" -> T1 : CHUNK
+	T1 -> Charlie : qTot.taskDone()
+
+	note left: Multi Chunk\nNo error
+	T1 -> Charlie  : qAB.get()
+	T1 -> "Alice\nPEER" : GET_CHUNK
+	"Alice\nPEER" -> T1 : CHUNK
+	T1 -> Charlie : qTot.taskDone()
+
+	note left: Multi Chunk\nNot found Error
+	T1 -> Charlie  : qAB.get()
+	T1 -> "Alice\nPEER" : GET_CHUNK
+	"Alice\nPEER" -> T1 : NOT FOUND
+	T1 -> Charlie : qB.put()
+
+
+	box "TRACKER" #LightBlue
+		participant "Tracker\nThread UDP"
+		participant "Tracker\nThread TCP"
+	end box
+	box "CLIENT" #LightBlue
+		participant Charlie
+		participant T1
+		participant T2
+	end box
+	participant "Alice\nPEER"
+	participant "Bob\nPEER"
+
+@enduml
