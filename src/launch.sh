@@ -67,7 +67,7 @@ elif [ $1 = 2 ]; then
     if [ $? = 1 ]; then
         echo "alice not launched"
         echo "Lauching alice"
-        $console -e $(pwd)/exec.sh python3 alice.py
+        $console -e 'python3 alice.py'
     else
         echo "alice already launched"
     fi
@@ -78,7 +78,7 @@ elif [ $1 = 2 ]; then
     if [ $? = 1 ]; then
         echo "bob not launched"
         echo "Lauching bob"
-        $console -e $(pwd)/exec.sh python3 bob.py
+        $console -e 'python3 bob.py'
     else
         echo "bob already launched"
     fi
@@ -89,7 +89,7 @@ elif [ $1 = 2 ]; then
     if [ $? = 1 ]; then
         echo "tracker not launched"
         echo "Lauching tracker"
-        $console -e $(pwd)/exec.sh python3 tracker.py
+        $console -e 'python3 tracker.py'
     else
         echo "tracker already launched"
     fi
