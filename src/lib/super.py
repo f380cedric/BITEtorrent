@@ -2,6 +2,7 @@ import socket
 
 class Super:
 	BUFFER_SIZE = 2048
+
 	def __init__(self, name):
 		self.name = name
 
@@ -55,6 +56,8 @@ class Super:
         return check_chunk
 
      @staticmethod
-    def is_get_chunck(message):
+    def is_type(message, istype):
+    	typedic = {'chunk_not_found':(6,4,2),'get_chunck':(4,3,7),'get_file_info':(2,3,2)}
+    	config = typedic[istype]
         """ Check the request to see if it is a GET_CHUNK """
-        return (struct.unpack("!BBHL",message[0:8])[1] == 4) & (struct.unpack("!BBHL",message[0:8])[3] == 7)
+        return (struct.unpack("!BBHL",message[0:8])[1] == config[0]) & (struct.unpack("!BBHL",message[0:8])[config[1]] == config[2])
