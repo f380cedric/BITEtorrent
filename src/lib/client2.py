@@ -25,11 +25,6 @@ class Clientv2(Client):
             return
         self.unpack_file_info(data)
         super().start()
-        
-
-
-
-    
 
     def tracker_com(self):
         """ Send a GET_FILE_INFO message. Return the FILE_INFO message. """
@@ -40,7 +35,7 @@ class Clientv2(Client):
             return self.receive(s)[0]
 
     def unpack_file_info(self, data):
-        """ Take the FILE_INFO as an argument. """
+        """ Take the FILE_INFO and excract the data to fill the differents queues """
         file = configparser.ConfigParser()
         list(map(file.add_section, ['description', 'chunks']))
         data = data[8::]
