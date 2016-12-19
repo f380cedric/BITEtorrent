@@ -4,7 +4,7 @@ The last step consists of modifying the client and the tracker in such a way tha
 
 \subsection{Proposed solution}
 
-When launched, the tracker is listening to broadcast messages (UDP) and to TCP requests, in separated threads. This broadcast message is sent by the client when wanting to start a file download. The message is sent using UDP because this protocol does not require an established connection between the two agents.
+When launched, the tracker is listening to broadcast messages and to TCP requests in separated threads. This broadcast message is sent by the client when wanting to start a file download. The message is sent using UDP because this protocol does not require an established connection between the two agents.
 
 \subsection{Sequence diagram}
 
