@@ -13,6 +13,7 @@ class Clientv3(Client):
         self.UDP_PORT = 9000
 
     def find_tracker(self):
+        """ UDP broadcast to find the tracker """
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -26,6 +27,7 @@ class Clientv3(Client):
                     break
 
     def unpack_tracker_info(self,data):
+        """ Unpack the TRACKER_INFO message the get the (ip,port) of the tracker """
         data = data[8::]
         *ip, port, tracker_name_length = struct.unpack('!4B2H', data[0:8])
         tracker_name = struct.unpack("!%ds" %tracker_name_length,data[8:8+tracker_name_length])[0].decode("UTF-8")
@@ -41,8 +43,6 @@ class Clientv3(Client):
         self.unpack_file_info(data)
         super().start()
 
-
-
     def tracker_com(self):
         """ Send a GET_FILE_INFO message. Return the FILE_INFO message. """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -52,7 +52,7 @@ class Clientv3(Client):
             return self.receive(s)[0]
 
     def unpack_file_info(self, data):
-        """ Take the FILE_INFO as an argument. """
+        """ Take the FILE_INFO and excract the data to fill the differents queues """
         file = configparser.ConfigParser()
         list(map(file.add_section, ['description', 'chunks']))
         data = data[8::]
