@@ -7,7 +7,7 @@ import socket
 from lib.super import Super
 from merge_chunks import MergeChunks
 
-class Client(Super):
+class Client(Super): # Superclass used by clientv1, clientv2 and clientv3
     chunks = [{},{}]
     providers = {}
     chunks_count = 0
@@ -35,6 +35,7 @@ class Client(Super):
         return self.receive(sock)[0]
 
     def start(self):
+        """ Start the client """
         super().start()
         th = []
         for key in self.chunks[0]:
@@ -49,6 +50,7 @@ class Client(Super):
         print('') #Fancy print
 
     def receptor(self,name):
+        """ Downlad the chunks from one peers """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.connect(name)
@@ -103,7 +105,7 @@ class Client(Super):
         return message[32:32+chunk_content_length]
 
     def create_queues(self,chunk_hash,peers):
-
+        """ Create the queues """
         list(map(self.providers[chunk_hash].append,peers))
         shared = 1
         if len(peers) == 1:

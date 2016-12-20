@@ -3,7 +3,7 @@
 # Must be lauched from src/
 
 
-### STEP 1 ###
+### Determination of the console ###
 
 
 if hash x-terminal-emulator 2>/dev/null; then
@@ -20,6 +20,8 @@ else
     echo "Can't found terminal"
     exit
 fi
+
+### STEP 1 ###
 
 if [ $1 = 1 ]; then
     echo "Lauching step 1 of the project:"
@@ -100,8 +102,10 @@ elif [ $1 = 2 ]; then
 
 ### STEP 3 ###
 
+# Must be scripted
+
 elif [ $1 = 3 ]; then
-	echo "Feature not yet implemented"
+	echo "Feature not yet implemented (in launch.sh)"
 
 else
     echo "Incorrect parameter"
