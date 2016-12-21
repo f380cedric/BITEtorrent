@@ -15,15 +15,15 @@ class Clientv2(Client):
         config = configparser.ConfigParser()
         config.read('../config/peers.ini')
         self.tracker = (config['tracker']['ip_address'], int(config['tracker']['port_number']))
-        self.tracker = ('164.15.76.104', 8000)
+        #self.tracker = ('164.15.76.104', 8000) # Uncomment this line to test Lab tracker
 
     def start(self):
         """ Start the client """
-        data = self.tracker_com()
+        data = self.tracker_com() # Get the file_info
         if data == False:
             print('ERROR NO DATA')
             return
-        self.unpack_file_info(data)
+        self.unpack_file_info(data) # Unpack the file info
         super().start()
 
     def tracker_com(self):
@@ -35,8 +35,8 @@ class Clientv2(Client):
             return self.receive(s)[0]
 
     def unpack_file_info(self, data):
-        """ Take the FILE_INFO and excract the data to fill the differents queues """
-        file = configparser.ConfigParser()
+        """ Take the FILE_INFO and extract the data to fill the different queues """
+        file = configparser.ConfigParser() # Same code that for Clientv3, see Clientv3
         list(map(file.add_section, ['description', 'chunks']))
         data = data[8::]
         self.chunks_count, filename_length = map(int,struct.unpack('!2H', data[:4]))

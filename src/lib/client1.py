@@ -12,7 +12,7 @@ class Clientv1(Client):
         config.read('../config/peers.ini')
         self.tracker = (config['tracker']['ip_address'], int(config['tracker']['port_number']))
         config.remove_section('tracker')
-        addresses = {}
+        addresses = {} # Generate queue configuration (see Client)
         for peer in config.sections():
             addresses[peer] = (config[peer]['ip_address'], int(config[peer]['port_number']))
         config.read('../config/file.ini')

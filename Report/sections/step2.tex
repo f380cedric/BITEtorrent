@@ -4,9 +4,9 @@ This step consists of the addition of the tracker. It will provide the client th
 
 \subsection{Proposed solution}
 
-The \texttt{tracker} class now implements the reading of the configuration file as the client did in step 1, in order to know the addresses, ports and chunks of the peers.
+The \texttt{Tracker} class now implements the reading of the configuration file as the client did in step 1, in order to know the addresses, ports and chunks of the peers.
 
-When a request is sent by the client to the tracker, all the file information is sent in a message. According to the content of this message, the list of chunks are placed in the adequate queues (only Alice, only Bob or owned by both). The file {\tt file.ini} is created and the follow-up is exactly the same as it was in step 1. The request to the tracker is sent using TCP to ensure that the correct IP and port will be received, as these are essential to establish a connection with the peers.
+When a request is sent by the client to the tracker, all the file information is sent in a message. According to the content of this message, the list of chunks are placed in the adequate queues (only Alice, only Bob or owned by both). The file {\tt file1.ini} (to avoid overriding {\tt file.ini} for testing simplicity) is created and the follow-up is exactly the same as it was in step 1. The request to the tracker is sent using TCP to ensure that the correct IP and port will be received, as these are essential to establish a connection with the peers.
 
 \subsection{Sequence diagram}
 
@@ -24,5 +24,3 @@ The principle is very similar to the first step once the information of the file
 \subsection{Bonus - contacting the lab tracker}
 
 2 bonus points could be earned by contacting a tracker at the lab and downloading provided in chunks. As the IP address and the port number of this tracker were known, the code of the step 2 was able to contact the tracker, download the chunks and reconstruct the file (5 minutes of the \textit{Start Wars III} movie). It is to be noted that some chunks that were supposed to be owned by both peers were not, but the implementation with the queues allowed to handle it without any problem.
-
-

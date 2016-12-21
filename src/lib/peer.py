@@ -11,7 +11,7 @@ class Peer(Super):
 	def __init__(self,name):
 		super().__init__(name)
 		config = configparser.ConfigParser()
-		config.read('../config/peers.ini')
+		config.read('../config/peers.ini') # Read the config.ini to know its own address
 		self.ip = config[name]['ip_address']
 		self.port = int(config[name]['port_number'])
 
@@ -22,17 +22,18 @@ class Peer(Super):
 			s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 			s.bind((self.ip, self.port))
 			print('\nServer is now bound to ip',self.ip,' and port',self.port)
-			s.listen(1) # Number of connection that the peers will accept
+			s.listen() # Number of connection that the peers will accept
 			while True:
 				print('Waiting for connection')
 				conn, addr = s.accept()
 				print('Connected by', addr)
-				threading.Thread(target=self.handle_client, args = [conn], daemon = True).start()
+				threading.Thread(target=self.handle_client, args = [conn], daemon = True).start() # A thread by connection
 				
 
 	def handle_client(self, conn):
+		""" Handle the connection with a client """
 		while True:
-			data = self.receive(conn)[0]
+			data = self.receive(conn)[0] # wait for request
 			if data == False:
 				break
 			if not self.check_message(data): #INVALID_MESSAGE_FORMAT
@@ -48,8 +49,9 @@ class Peer(Super):
 
 			else:
 				print('Request received for chunk', self.chunk_hash(data))
-				print('sent: ',len(self.generate_chunk_message(self.chunk_hash(data))))
-				conn.send(self.generate_chunk_message(self.chunk_hash(data)))
+				chunk_message = self.generate_chunk_message(self.chunk_hash(data))
+				print('sent: ',len(chunk_message))
+				conn.send(chunk_message)
 				print('Chunk sent')
 		print('Connection closed')
 		conn.close()
@@ -59,6 +61,7 @@ class Peer(Super):
 		return os.path.isfile("../chunks/"+self.name+"/"+chunk_hash+".bin")
 
 	def generate_chunk_message(self,chunk_hash):
+		""" Generate the chunk message"""
 		with open("../chunks/"+self.name+"/"+chunk_hash+".bin",'rb') as file:
 			content = file.read()
 

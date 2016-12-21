@@ -1,20 +1,22 @@
 import socket
 import struct
 
-class Super:
-	BUFFER_SIZE = 2048
+class Super: # Superclass of all other class (abstract)
+	BUFFER_SIZE = 2048 # Python socket lib doc: "For best match with hardware and network realities, the value of bufsize should be a relatively small power of 2".
 
 	def __init__(self, name):
 		self.name = name
 
 	def receive(self,sock):
+		""" Handle the reception of packet
+		Return: tuple: the data received and the address of the socket sending the data  """
 		data = bytes()
-		while len(data) < 8:
+		while len(data) < 8: # be sure we have at least the header
 			result = sock.recvfrom(self.BUFFER_SIZE)
 			data += result[0]
 			if not result[0]:
 				return (False,False)
-		length = int(struct.unpack("!BBHL",data[0:8])[3])*4
+		length = int(struct.unpack("!BBHL",data[0:8])[3])*4 # unpack to know the message length
 		while len(data) < length:
 			result = sock.recvfrom(self.BUFFER_SIZE)
 			data += result[0]
@@ -53,6 +55,7 @@ class Super:
 
 	@staticmethod
 	def is_type(message, istype):
+		""" Check if the message is a 'istype' """
 		typedic = {'chunk_not_found':(6,4,2,"!BBHLHH"),'get_chunk':(4,3,7,"!BBHL"),'get_file_info':(2,3,2,"!BBHL"),'discover_tracker':(0,3,2,"!BBHL")}
 		config = typedic[istype]
 		return (struct.unpack("!BBHL",message[0:8])[1] == config[0]) & (struct.unpack(config[3],message[0:struct.calcsize(config[3])])[config[1]] == config[2])

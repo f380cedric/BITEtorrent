@@ -6,13 +6,13 @@ Knowing the message format used in the project\footnote{\url{https://github.com/
 
 \subsection{Proposed solution}
 
-Using object-oriented Python programming, classes \texttt{peers} and \texttt{client} have been created. Alice and Bob are thus \texttt{peers} objects and Charlie is a \texttt{client} object.
+Using object-oriented Python programming, classes \texttt{Peers} and \texttt{Client} have been created. Alice and Bob are thus \texttt{Peers} objects and Charlie is a subclass of \texttt{Client}. Charlie will be \texttt{Clientv1}, \texttt{Clientv2} or \texttt{Clientv3} depending of the step. A superclass \texttt{Super} (superclass of \texttt{Peers}, \texttt{Client} and \texttt{Tracker}) has been implemented to avoid code repetitions.
 
 All the data transfer between the peers and the client are handled using TCP to ensure that every requested chunk is correctly transmitted (provided a peer owns it). Moreover, the code was designed to limit the opening and closing of sockets.
 
 \subsubsection{Peers}
 
-The way peers are implemented is quite straightforward. When instantiated, the peer opens a socket and stays idle while waiting for a connection. When a connection is received from the client, a single thread by peer is launched.
+The way peers are implemented is quite straightforward. When instantiated, the peer opens a socket and stays idle while waiting for a connection. When a connection is received from the client, a single thread by peer (and by connection) is launched.
 
 This thread will analyse the incoming messages and will send back the appropriate errors when necessary. If the message format and content are correct, the peer will send the requested chunk to the client.
 
@@ -22,7 +22,7 @@ The thread will run and send errors through the socket while there are incoming 
 
 The client is implemented in order to achieve the maximum file transfer speed, while handling cases where the configuration file declaring which peer owns which chunk is not correct. Furthermore, the client works regardless of the number of peers.
 
-Two threads are created so that the chunks are requested and downloaded from Alice and Bob in a parallel way. The library \texttt{Queue} is used, and four queues are created when the client is instantiated. The first and second queues contain the list of chunks that are only owned by one of the two peers (qA for Alice only and qB for Bob only). In this way, each thread is sending requests to a different peer and it is only asking for chunks that are not shared. When the queue associated to a thread is empty, it will request chunks that are owned by the two peers, which are listed in the third queue (qAB). The fourth (qTot) contains all the chunks needed. This implementation allows to ensure that if one of the connections is slower that the other, the impact on the file transfer speed will be as little as possible.
+Two threads are created so that the chunks are requested and downloaded from Alice and Bob in a parallel way. The library \texttt{Queue} is used, and four queues are created when the client is instantiated. The first and second queues contain the list of chunks that are only owned by one of the two peers (qA for Alice only and qB for Bob only). In this way, each thread is sending requests to a different peer and it is only asking for chunks that are not shared. When the queue associated to a thread is empty, it will request chunks that are owned by the two peers, which are listed in the third queue (qAB). The fourth (qTot) contains all the chunks needed. It allows to know if all chunks have been downloaded. This implementation allows to ensure that if one of the connections is slower that the other, the impact on the file transfer speed will be as little as possible.
 
 Moreover, when a chunk which was placed in the queue qAB is not found where it was requested, it will be put in qA or qB, depending on which peer sent a \texttt{NOT FOUND ERROR}. This implies that the client will handle cases where the chunk is supposed to be owned by Alice and Bob but is actually owned only by one of the two.
 
